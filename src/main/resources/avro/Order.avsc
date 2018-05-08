@@ -1,0 +1,57 @@
+[
+  {
+    "namespace": "ch.ipt.handson",
+    "name": "ShoppingCart",
+    "version": "1",
+    "type": "record",
+    "fields": [
+      {
+        "name": "Products",
+        "type": {
+          "type": "array",
+          "items": {
+            "namespace": "ch.ipt.handson",
+            "name": "Product",
+            "version": "1",
+            "type": "record",
+            "doc": "A product that can be viewed, ordered, etc.",
+            "fields": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "price",
+                "doc": "Price in cents/Rappen.",
+                "type": "int"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "namespace": "ch.ipt.handson",
+    "name": "Order",
+    "version": "1",
+    "type": "record",
+    "doc": "A customer places an order.",
+    "fields": [
+      {
+        "name": "customer",
+        "doc": "Customer logged in.",
+        "type": "string"
+      },
+      {
+        "name": "cart",
+        "type": "ch.ipt.handson.ShoppingCart"
+      },
+      {
+        "name": "totalAmount",
+        "doc": "Purchase total amount, in cents/Rappen.",
+        "type": "bytes"
+      }
+    ]
+  }
+]

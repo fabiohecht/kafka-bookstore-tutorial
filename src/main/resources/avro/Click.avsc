@@ -1,0 +1,30 @@
+{
+  "namespace": "ch.ipt.handson",
+  "name": "Click",
+  "version": "1",
+  "type": "record",
+  "doc": "A customer views a product.",
+  "fields": [
+    {
+      "name": "product",
+      "doc": "Product viewed.",
+      "type": "string"
+    },
+    {
+      "name": "customer",
+      "doc": "Customer logged in.",
+      "type": "string"
+    },
+    {
+      "name": "event",
+      "doc": "Viewed, pl.",
+        "type": "string",
+      "enum": [
+        "view",
+        "add_to_cart",
+        ""
+      ]
+
+    }
+  ]
+}
