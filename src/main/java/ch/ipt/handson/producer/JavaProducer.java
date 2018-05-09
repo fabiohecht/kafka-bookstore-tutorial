@@ -1,14 +1,12 @@
 package ch.ipt.handson.producer;
 
+import com.github.javafaker.Faker;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Properties;
-import java.util.Random;
+import java.util.*;
 
 public class JavaProducer {
 
@@ -43,6 +41,10 @@ public class JavaProducer {
         properties.setProperty("acks", "1");
         properties.setProperty("retries", "3");
         properties.setProperty("linger.ms", "1");
+
+
+        Faker faker = new Faker(new Locale("de-CH"));
+
 
 //        Producer<String, Expense> producer = new org.apache.kafka.clients.producer.KafkaProducer<>(properties);
 //

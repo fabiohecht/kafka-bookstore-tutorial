@@ -3,15 +3,15 @@
   "name": "Click",
   "version": "1",
   "type": "record",
-  "doc": "A customer views a product.",
+  "doc": "A customer interacts with website.",
   "fields": [
     {
       "name": "product",
       "doc": "Product viewed.",
-      "type": "string"
+      "type": ["string", "null"]
     },
     {
-      "name": "customer",
+      "name": "customerEmail",
       "doc": "Customer logged in.",
       "type": "string"
     },
@@ -21,10 +21,8 @@
         "type": "string",
       "enum": [
         "view",
-        "add_to_cart",
-        ""
+        "add_to_cart"
       ]
-
     }
   ]
 }

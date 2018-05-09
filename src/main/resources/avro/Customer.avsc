@@ -7,7 +7,7 @@
   "fields": [
     {
       "name": "customerId",
-      "type": "string"
+      "type": "int"
     },
     {
       "name": "name",
