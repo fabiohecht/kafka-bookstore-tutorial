@@ -66,11 +66,17 @@
       },
       {
         "name": "authors",
-        "type": "string"
+        "type": [
+          "null",
+          "string"
+        ]
       },
       {
         "name": "categories",
-        "type": "string"
+        "type": [
+          "null",
+          "string"
+        ]
       },
       {
         "name": "price",
