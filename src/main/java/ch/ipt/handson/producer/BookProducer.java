@@ -16,14 +16,15 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.List;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
 public class BookProducer {
     public static final String TOPIC_BOOK = "book";
-    private static final String RESOURCE_FILE = "data/books-kafka.json";
 
     static private Producer producer;
+    static private BooksCollection booksCollection;
 
     public static void main(String[] args) throws IOException {
         setUpProducer();
@@ -31,51 +32,14 @@ public class BookProducer {
     }
 
     private static void parseResource() throws IOException {
-        ClassLoader classLoader = BookProducer.class.getClassLoader();
-        File file = new File(classLoader.getResource(RESOURCE_FILE).getFile());
 
-        JsonArray books = Json.parse(new FileReader(file)).asArray();
+        List<Book> books = BooksCollection.getBooks();
 
-        for (JsonValue book : books) {
-            JsonObject bookObject = book.asObject();
-            JsonObject volumeInfo = bookObject.get("volumeInfo").asObject();
+        for (Book book : books) {
 
-            String id = bookObject.get("id").asString();
-            String title = volumeInfo.get("title").asString();
+            System.out.println(book);
 
-            JsonValue authorsObj = volumeInfo.get("authors");
-            String authors = authorsObj == null ? null : authorsObj.asArray().values().stream().map(jsonValue -> jsonValue.asString()).collect(Collectors.joining(","));
-
-            JsonValue categoriesObj = volumeInfo.get("categories");
-            String categories = categoriesObj == null ? null : categoriesObj.asArray().values().stream().map(jsonValue -> jsonValue.asString()).collect(Collectors.joining(","));
-
-            Integer price = null;
-            JsonObject saleInfo = bookObject.get("saleInfo").asObject();
-            if (saleInfo != null) {
-                JsonValue listPrice = saleInfo.asObject().get("listPrice");
-                if (listPrice != null) {
-                    JsonValue amount = listPrice.asObject().get("amount");
-                    if (amount != null) {
-                        price = Math.round(amount.asFloat() * 100F);
-                    }
-                }
-            }
-
-            if (price == null) {
-                price = 50 * title.charAt(0);
-            }
-
-            Book bookValue = Book.newBuilder()
-                    .setId(id)
-                    .setTitle(title)
-                    .setAuthors(authors)
-                    .setCategories(categories)
-                    .setPrice(price)
-                    .build();
-
-            System.out.println(bookValue);
-
-            producer.send(new ProducerRecord(TOPIC_BOOK, id, bookValue));
+            producer.send(new ProducerRecord(TOPIC_BOOK, book.getId(), book));
         }
         System.out.println("Done producing books.");
     }
