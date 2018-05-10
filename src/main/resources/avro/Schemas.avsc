@@ -52,16 +52,24 @@
   },
   {
     "namespace": "ch.ipt.handson.event",
-    "name": "Product",
+    "name": "Book",
     "type": "record",
-    "doc": "A product that can be viewed, ordered, etc.",
+    "doc": "A book that can be viewed, ordered, etc.",
     "fields": [
       {
-        "name": "name",
+        "name": "id",
         "type": "string"
       },
       {
-        "name": "category",
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "name": "authors",
+        "type": "string"
+      },
+      {
+        "name": "categories",
         "type": "string"
       },
       {
@@ -79,8 +87,8 @@
       "type": "record",
       "fields": [
         {
-          "name": "product",
-          "type": "ch.ipt.handson.event.Product"
+          "name": "book",
+          "type": "ch.ipt.handson.event.Book"
         }
       ]
     }
@@ -97,7 +105,7 @@
         "type": "string"
       },
       {
-        "name": "products",
+        "name": "books",
         "type": "ch.ipt.handson.event.ShoppingCart"
       },
       {
@@ -193,9 +201,9 @@
         ]
       },
       {
-        "name": "product",
-        "doc": "Product viewed, added to cart, etc.",
-        "type": "ch.ipt.handson.event.Product"
+        "name": "book",
+        "doc": "Book viewed, added to cart, etc.",
+        "type": "ch.ipt.handson.event.Book"
       },
       {
         "name": "event",
