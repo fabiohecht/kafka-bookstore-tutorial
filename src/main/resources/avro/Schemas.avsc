@@ -25,6 +25,27 @@
   },
   {
     "namespace": "ch.ipt.handson.event",
+    "name": "Product",
+    "type": "record",
+    "doc": "A product that can be viewed, ordered, etc.",
+    "fields": [
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "category",
+        "type": "string"
+      },
+      {
+        "name": "price",
+        "doc": "Price in cents/Rappen.",
+        "type": "int"
+      }
+    ]
+  },
+  {
+    "namespace": "ch.ipt.handson.event",
     "name": "Order",
     "type": "record",
     "doc": "A customer places an order.",
@@ -40,26 +61,22 @@
           "type": "array",
           "items": {
             "namespace": "ch.ipt.handson.event",
-            "name": "Product",
+            "name": "ShoppingCart",
             "type": "record",
-            "doc": "A product that can be viewed, ordered, etc.",
             "fields": [
               {
-                "name": "name",
-                "type": "string"
-              },
-              {
-                "name": "category",
-                "type": "string"
-              },
-              {
-                "name": "price",
-                "doc": "Price in cents/Rappen.",
-                "type": "int"
+                "name": "product",
+                "doc": "Product bought.",
+                "type": "ch.ipt.handson.event.Product"
               }
             ]
           }
         }
+      },
+      {
+        "name": "packet",
+        "doc": "Packet ID.",
+        "type": "string"
       },
       {
         "name": "totalAmount",
@@ -80,8 +97,10 @@
         "type": "string"
       },
       {
-        "name": "product",
-        "type": "ch.ipt.handson.event.Product"
+        "name": "timestamp",
+        "doc": "When event happened.",
+        "type": "bytes",
+        "logicalType": "timestamp-millis"
       },
       {
         "name": "status",
@@ -149,7 +168,7 @@
       {
         "name": "product",
         "doc": "Product viewed, added to cart, etc.",
-        "type": "string"
+        "type": "ch.ipt.handson.event.Product"
       },
       {
         "name": "event",
