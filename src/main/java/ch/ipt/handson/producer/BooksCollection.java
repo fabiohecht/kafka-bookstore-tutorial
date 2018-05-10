@@ -7,7 +7,6 @@ import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,7 +20,7 @@ public class BooksCollection {
     static ArrayList<Book> books = new ArrayList<>();
 
     static {
-        ClassLoader classLoader = BookProducer.class.getClassLoader();
+        ClassLoader classLoader = BooksCollection.class.getClassLoader();
         File file = new File(classLoader.getResource(RESOURCE_FILE).getFile());
 
         JsonArray jsonBooksArray = null;
@@ -40,10 +39,10 @@ public class BooksCollection {
             String title = volumeInfo.get("title").asString();
 
             JsonValue authorsObj = volumeInfo.get("authors");
-            String authors = authorsObj == null ? null : authorsObj.asArray().values().stream().map(jsonValue -> jsonValue.asString()).collect(Collectors.joining(","));
+            String authors = authorsObj == null ? null : authorsObj.asArray().values().stream().map(jsonValue -> jsonValue.asString()).collect(Collectors.joining(", "));
 
             JsonValue categoriesObj = volumeInfo.get("categories");
-            String categories = categoriesObj == null ? null : categoriesObj.asArray().values().stream().map(jsonValue -> jsonValue.asString()).collect(Collectors.joining(","));
+            String categories = categoriesObj == null ? null : categoriesObj.asArray().values().stream().map(jsonValue -> jsonValue.asString()).collect(Collectors.joining(", "));
 
             Integer price = null;
             JsonObject saleInfo = bookObject.get("saleInfo").asObject();

@@ -1,6 +1,6 @@
 package ch.ipt.handson.producer;
 
-import ch.ipt.handson.event.Book;
+import ch.ipt.handson.event.Customer;
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -13,11 +13,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 
-public class BookProducer {
-    public static final String TOPIC_BOOK = "book";
+public class CustomerProducer {
+    public static final String TOPIC_CUSTOMER = "customer";
 
     static private Producer producer;
-    static private BooksCollection booksCollection;
+    static private CustomersCollection customersCollection;
 
     public static void main(String[] args) throws IOException {
         setUpProducer();
@@ -26,17 +26,17 @@ public class BookProducer {
 
     private static void parseResource() throws IOException {
 
-        List<Book> books = BooksCollection.getBooks();
+        List<Customer> customers = CustomersCollection.getCustomers();
 
-        for (Book book : books) {
+        for (Customer customer : customers) {
 
-            System.out.println(book);
+            System.out.println(customer);
 
-            producer.send(new ProducerRecord(TOPIC_BOOK, book.getId(), book));
+            producer.send(new ProducerRecord(TOPIC_CUSTOMER, customer.getCustomerId().toString(), customer));
         }
-        producer.close();
+        System.out.println("Done producing customers.");
 
-        System.out.println("Done producing books.");
+        producer.close();
     }
 
     private static void setUpProducer() {

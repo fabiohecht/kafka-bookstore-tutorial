@@ -1,9 +1,7 @@
 package ch.ipt.handson.producer;
 
+import ch.ipt.handson.event.Book;
 import ch.ipt.handson.event.WebsiteInteraction;
-import com.github.javafaker.Address;
-import com.github.javafaker.Book;
-import com.github.javafaker.Commerce;
 import com.github.javafaker.Faker;
 import com.google.common.util.concurrent.RateLimiter;
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
@@ -27,6 +25,7 @@ public class EventProducer {
 
     static private Producer producer;
     static private Faker faker;
+    static private Random random = new Random();
 
     static final RateLimiter rateLimiter = RateLimiter.create(VIEWS_PER_SECOND);
 
@@ -43,23 +42,22 @@ public class EventProducer {
     private static void produce() {
         while (true) {
 
-            Book product = faker.book();
-//
-//            ProducerRecord<String, WebsiteInteraction> producerRecord =
-//                    new ProducerRecord<>(
-//                            TOPIC_WEBSITE_INTERACTION,
-//                            WebsiteInteraction.newBuilder()
-//                                    .setCustomerEmail("online customer")
-//                                    .setBook(Book.newBuilder()
-//                                            .setName(product.title())
-//                                            .setCategory(product.genre())
-//                                            .setPrice(101))
-//                                    .setSession(UUID.randomUUID().toString())
-//                                    .setEvent("view")
-//                                    .build());
-//
-//            //producer.send(producerRecord);
-//            System.out.println(producerRecord);
+            int index = random.nextInt(BooksCollection.getBooks().size());
+            System.out.println(index);
+            Book book = BooksCollection.getBooks().get(index);
+
+            ProducerRecord<String, WebsiteInteraction> producerRecord =
+                    new ProducerRecord<>(
+                            TOPIC_WEBSITE_INTERACTION,
+                            WebsiteInteraction.newBuilder()
+                                    .setCustomerEmail("online customer")
+                                    .setBook(book)
+                                    .setSession(UUID.randomUUID().toString())
+                                    .setEvent("view")
+                                    .build());
+
+            //producer.send(producerRecord);
+            System.out.println(producerRecord);
 
             rateLimiter.acquire();
         }
@@ -110,6 +108,6 @@ public class EventProducer {
         properties.setProperty(ProducerConfig.RETRIES_CONFIG, "3");
         properties.setProperty(ProducerConfig.LINGER_MS_CONFIG, "1");
 
-        producer=new KafkaProducer(properties);
+        producer = new KafkaProducer(properties);
     }
 }
