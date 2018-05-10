@@ -1,6 +1,7 @@
 package ch.ipt.handson.producer;
 
 import ch.ipt.handson.event.Book;
+import ch.ipt.handson.event.Customer;
 import ch.ipt.handson.event.WebsiteInteraction;
 import com.github.javafaker.Faker;
 import com.google.common.util.concurrent.RateLimiter;
@@ -42,27 +43,34 @@ public class EventProducer {
     private static void produce() {
         while (true) {
 
-            int index = random.nextInt(BooksCollection.getBooks().size());
-            System.out.println(index);
-            Book book = BooksCollection.getBooks().get(index);
+            Book book = getRandomBook();
+            Customer customer = getRandomCustomer();
 
             ProducerRecord<String, WebsiteInteraction> producerRecord =
                     new ProducerRecord<>(
                             TOPIC_WEBSITE_INTERACTION,
                             WebsiteInteraction.newBuilder()
-                                    .setCustomerEmail("online customer")
+                                    .setCustomerEmail(customer.getEmail())
                                     .setBook(book)
                                     .setSession(UUID.randomUUID().toString())
                                     .setEvent("view")
                                     .build());
 
-            //producer.send(producerRecord);
+            producer.send(producerRecord);
             System.out.println(producerRecord);
 
             rateLimiter.acquire();
         }
 
 
+    }
+
+    private static Customer getRandomCustomer() {
+        return CustomersCollection.getCustomers().get(random.nextInt(CustomersCollection.getCustomers().size()));
+    }
+
+    private static Book getRandomBook() {
+        return BooksCollection.getBooks().get(random.nextInt(BooksCollection.getBooks().size()));
     }
 
 //        ArrayList<String> employees = new ArrayList<String>();
