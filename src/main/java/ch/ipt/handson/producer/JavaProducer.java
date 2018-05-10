@@ -1,5 +1,6 @@
 package ch.ipt.handson.producer;
 
+import com.github.javafaker.Address;
 import com.github.javafaker.Faker;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import org.apache.kafka.clients.producer.Producer;
@@ -45,24 +46,29 @@ public class JavaProducer {
 
         Faker faker = new Faker(new Locale("de-CH"));
 
-
-//        Producer<String, Expense> producer = new org.apache.kafka.clients.producer.KafkaProducer<>(properties);
+        for (int i = 0; i < 100; i++) {
+            Address address = faker.address();
+            System.out.println(address.streetAddress() + ", " + address.zipCode() + " " + address.city() + ", " + address.state());
+        }
+//
+//        Click
+//        Producer<String, Click> producer = new org.apache.kafka.clients.producer.KafkaProducer<>(properties);
 //
 //        // Fill ArrayLists with values
 //        Collections.addAll(employees, "RKO","DAL","PGR","DAL","SHU","TIN","LKE","TSC","ASH","FHE");
 //        Collections.addAll(description, "Mittagessen","Abendessen","Training","Bahn","Geschäftsauto","Wochenunterkunft","Flug","Hotel","BYO");
 //
-//        // Do every x milliseconds
+        // Do every x milliseconds
 //        while (true){
-//            ProducerRecord<String, Expense> producerRecord =
+//            ProducerRecord<String, Click> producerRecord =
 //                    new ProducerRecord<>(
 //                            topic,
 //                            null,
 //                            null,
 //
-//                            Expense.newBuilder()
+//                            Click.newBuilder()
 //                                    // pick random employee
-//                                    .setEmployeeAcronym(employees.get(random_employee.nextInt(employees.size())))
+//                                    .setCustomerEmail(faker.numerify())
 //                                    // pick random description
 //                                    .setDescription(description.get(random_employee.nextInt(description.size())))
 //                                    // generate random number

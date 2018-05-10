@@ -1,0 +1,165 @@
+[
+  {
+    "namespace": "ch.ipt.handson.event",
+    "name": "Customer",
+    "type": "record",
+    "doc": "A customer.",
+    "fields": [
+      {
+        "name": "customerId",
+        "type": "int"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "address",
+        "type": "string"
+      },
+      {
+        "name": "email",
+        "type": "string"
+      }
+    ]
+  },
+  {
+    "namespace": "ch.ipt.handson.event",
+    "name": "Order",
+    "type": "record",
+    "doc": "A customer places an order.",
+    "fields": [
+      {
+        "name": "customer",
+        "doc": "Customer logged in.",
+        "type": "string"
+      },
+      {
+        "name": "products",
+        "type": {
+          "type": "array",
+          "items": {
+            "namespace": "ch.ipt.handson.event",
+            "name": "Product",
+            "type": "record",
+            "doc": "A product that can be viewed, ordered, etc.",
+            "fields": [
+              {
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "name": "category",
+                "type": "string"
+              },
+              {
+                "name": "price",
+                "doc": "Price in cents/Rappen.",
+                "type": "int"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "totalAmount",
+        "doc": "Purchase total amount, in cents/Rappen.",
+        "type": "bytes"
+      }
+    ]
+  },
+  {
+    "namespace": "ch.ipt.handson.event",
+    "name": "Shipping",
+    "type": "record",
+    "doc": "Shipping data updated by shipping partner (Swiss post) via API.",
+    "fields": [
+      {
+        "name": "packet",
+        "doc": "Packet ID.",
+        "type": "string"
+      },
+      {
+        "name": "product",
+        "type": "ch.ipt.handson.event.Product"
+      },
+      {
+        "name": "status",
+        "type": "string",
+        "enum": [
+          "received",
+          "underway",
+          "lost",
+          "delivered"
+        ]
+      }
+    ]
+  },
+  {
+    "namespace": "ch.ipt.handson.event",
+    "name": "Payment",
+    "type": "record",
+    "doc": "Payment info updated by bank via API, files, whatever.",
+    "fields": [
+      {
+        "name": "order",
+        "doc": "Order ID.",
+        "type": "string"
+      },
+      {
+        "name": "transactionId",
+        "doc": "Something that helps tracing back to individual payment transaction.",
+        "type": "string"
+      },
+      {
+        "name": "timestamp",
+        "doc": "When transaction happened.",
+        "type": "bytes",
+        "logicalType": "timestamp-millis"
+      },
+      {
+        "name": "amount",
+        "doc": "Amount paid in cents/Rappen.",
+        "type": "int"
+      }
+    ]
+  },
+  {
+    "namespace": "ch.ipt.handson.event",
+    "name": "WebsiteInteraction",
+    "type": "record",
+    "doc": "A customer interacts with website.",
+    "fields": [
+      {
+        "name": "customerEmail",
+        "doc": "Customer logged in (if logged in).",
+        "type": [
+          "null",
+          "string"
+        ]
+      },
+      {
+        "name": "session",
+        "doc": "Browser session.",
+        "type": [
+          "null",
+          "string"
+        ]
+      },
+      {
+        "name": "product",
+        "doc": "Product viewed, added to cart, etc.",
+        "type": "string"
+      },
+      {
+        "name": "event",
+        "type": "string",
+        "enum": [
+          "view",
+          "cart",
+          "order"
+        ]
+      }
+    ]
+  }
+]
