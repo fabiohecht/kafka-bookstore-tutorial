@@ -72,6 +72,20 @@
     ]
   },
   {
+    "type": "array",
+    "items": {
+      "namespace": "ch.ipt.handson.event",
+      "name": "ShoppingCart",
+      "type": "record",
+      "fields": [
+        {
+          "name": "product",
+          "type": "ch.ipt.handson.event.Product"
+        }
+      ]
+    }
+  },
+  {
     "namespace": "ch.ipt.handson.event",
     "name": "Order",
     "type": "record",
@@ -84,21 +98,7 @@
       },
       {
         "name": "products",
-        "type": {
-          "type": "array",
-          "items": {
-            "namespace": "ch.ipt.handson.event",
-            "name": "ShoppingCart",
-            "type": "record",
-            "fields": [
-              {
-                "name": "product",
-                "doc": "Product bought.",
-                "type": "ch.ipt.handson.event.Product"
-              }
-            ]
-          }
-        }
+        "type": "ch.ipt.handson.event.ShoppingCart"
       },
       {
         "name": "packet",
