@@ -8,7 +8,7 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import java.util.Properties;
 
 public class GlobalConfiguration {
-    public static final String BOOTSTRAP_SERVERS = "127.0.0.1:29092";
+    public static final String BOOTSTRAP_SERVERS = "127.0.0.1:9092";
     public static final String SCHEMA_REGISTRY_URL = "http://127.0.0.1:8081";
     public static final String ACKS = "1";
     public static final String RETRIES = "3";
