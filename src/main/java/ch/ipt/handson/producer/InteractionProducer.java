@@ -4,6 +4,7 @@ import ch.ipt.handson.event.*;
 import com.google.common.util.concurrent.RateLimiter;
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -20,11 +21,21 @@ public class InteractionProducer {
     public static final String TOPIC_WEBSITE_INTERACTION = "interaction";
     public static final String TOPIC_ORDER = "order";
     public static final String TOPIC_PAYMENT = "payment";
+    public static final String TOPIC_SHIPPING = "shipping";
 
 
     public static final double VIEWS_PER_SECOND = 100.0;
     public static final double CART_ODDS = .5;
     public static final double ORDER_ODDS = .2;
+    public static final int MEAN_PAYMENT_TIME_SECONDS = 60;
+    public static final int STDEV_PAYMENT_TIME_SECONDS = 30;
+    public static final int MEAN_SHIPPING_TIME_SECONDS = 5;
+    public static final int STDEV_SHIPPING_TIME_SECONDS = 2;
+    public static final int MEAN_UNDERWAY_TIME_SECONDS = 10;
+    public static final int STDEV_UNDERWAY_TIME_SECONDS = 2;
+    public static final int MEAN_DELIVERY_TIME_SECONDS = 30;
+    public static final int STDEV_DELIVERY_TIME_SECONDS = 10;
+    private static final double PACKET_LOST_ODDS = .2;
 
     static private Producer producer;
     static private Random random = new Random();
@@ -70,11 +81,51 @@ public class InteractionProducer {
 
                     carts.remove(customer);
 
-                    executor.schedule(() -> produceOrderPayment(orderRecord.value()), Math.round(randomGaussian(60, 30)), TimeUnit.MILLISECONDS);
+                    executor.schedule(() -> produceOrderPayment(orderRecord.value()), Math.round(randomGaussian(MEAN_PAYMENT_TIME_SECONDS, STDEV_PAYMENT_TIME_SECONDS)), TimeUnit.SECONDS);
                 }
             }
             rateLimiter.acquire();
         }
+    }
+
+    private static void produceOrderShipping(Order order) {
+        String packet = RandomStringUtils.random(10, true, true);
+        order.setPacket(packet);
+
+        //we update order with packet id
+        ProducerRecord<String, Order> orderRecordWithPacket = getOrderRecord(order);
+        producer.send(orderRecordWithPacket);
+
+        //post sends status "underway"
+        executor.schedule(() -> produceShippingUnderway(packet), Math.round(randomGaussian(MEAN_UNDERWAY_TIME_SECONDS, STDEV_UNDERWAY_TIME_SECONDS)), TimeUnit.SECONDS);
+    }
+
+    private static void produceShippingUnderway(String packet) {
+        ProducerRecord<String, Shipping> shippingRecord = getShippingRecord(packet, "underway");
+        producer.send(shippingRecord);
+        System.out.println("SHIP " + shippingRecord);
+
+        //post sends status "delivered" or "lost"
+        executor.schedule(() -> produceShippingDone(packet), Math.round(randomGaussian(MEAN_DELIVERY_TIME_SECONDS, STDEV_DELIVERY_TIME_SECONDS)), TimeUnit.SECONDS);
+    }
+
+    private static void produceShippingDone(String packet) {
+        ProducerRecord<String, Shipping> shippingRecord = getShippingRecord(packet,
+                random.nextDouble() < PACKET_LOST_ODDS ? "lost" : "delivered");
+        producer.send(shippingRecord);
+        System.out.println("SHIP " + shippingRecord);
+    }
+
+    private static ProducerRecord<String, Shipping> getShippingRecord(String packet, String status) {
+        return new ProducerRecord<>(
+                TOPIC_SHIPPING,
+                packet,
+                Shipping.newBuilder()
+                        .setPacket(packet)
+                        .setStatus(status)
+                        .setTimestamp(new Date().getTime())
+                        .build()
+        );
     }
 
     private static void produceOrderPayment(Order order) {
@@ -91,26 +142,34 @@ public class InteractionProducer {
         producer.send(paymentRecord);
         System.out.println("PAY " + paymentRecord);
 
+        executor.schedule(() -> produceOrderShipping(order), Math.round(randomGaussian(MEAN_SHIPPING_TIME_SECONDS, STDEV_SHIPPING_TIME_SECONDS)), TimeUnit.SECONDS);
     }
 
     private static double randomGaussian(double mean, double standardDeviation) {
         return random.nextGaussian() * standardDeviation + mean;
-
     }
 
     private static ProducerRecord<String, Order> getOrderRecord(Customer customer) {
-        ShoppingCart shoppingCart = carts.get(customer);
         String id = UUID.randomUUID().toString();
+        Order order = buildOrder(id, customer, null, carts.get(customer));
+        return getOrderRecord(order);
+    }
+
+    private static ProducerRecord<String, Order> getOrderRecord(Order order) {
         return new ProducerRecord<>(
                 TOPIC_ORDER,
-                id,
-                Order.newBuilder()
-                        .setOrderId(id)
-                        .setCustomer(customer)
-                        .setBooks(shoppingCart)
-                        .setPacket(null)
-                        .setTotalAmount(shoppingCart.getBooks().stream().map(book -> book.getPrice()).reduce((p0, p1) -> p0 + p1).orElse(0))
-                        .build());
+                order.getOrderId(),
+                order);
+    }
+
+    private static Order buildOrder(String id, Customer customer, String packet, ShoppingCart shoppingCart) {
+        return Order.newBuilder()
+                .setOrderId(id)
+                .setCustomer(customer)
+                .setBooks(shoppingCart)
+                .setPacket(packet)
+                .setTotalAmount(shoppingCart.getBooks().stream().map(book -> book.getPrice()).reduce((p0, p1) -> p0 + p1).orElse(0))
+                .build();
     }
 
     private static void addToCart(Customer customer, Book book) {

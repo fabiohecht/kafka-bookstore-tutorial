@@ -157,7 +157,6 @@
         "name": "status",
         "type": "string",
         "enum": [
-          "received",
           "underway",
           "lost",
           "delivered"
