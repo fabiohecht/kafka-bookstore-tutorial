@@ -36,7 +36,7 @@ public class CustomersCollection {
 
             customers.add(Customer.newBuilder()
                     .setFirstname(customerObject.get("first_name").asString())
-                    .setLastname(customerObject.get("first_name").asString())
+                    .setLastname(customerObject.get("last_name").asString())
                     .setCustomerId(customerObject.get("id").asInt())
                     .setEmail(customerObject.get("email").asString())
                     .setAddressBuilder(Address.newBuilder()

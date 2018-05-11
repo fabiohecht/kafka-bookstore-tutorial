@@ -90,18 +90,18 @@
     ]
   },
   {
-    "type": "array",
-    "items": {
-      "namespace": "ch.ipt.handson.event",
-      "name": "ShoppingCart",
-      "type": "record",
-      "fields": [
-        {
-          "name": "book",
-          "type": "ch.ipt.handson.event.Book"
+    "namespace": "ch.ipt.handson.event",
+    "name": "ShoppingCart",
+    "type": "record",
+    "fields": [
+      {
+        "name": "books",
+        "type": {
+          "type": "array",
+          "items": "ch.ipt.handson.event.Book"
         }
-      ]
-    }
+      }
+    ]
   },
   {
     "namespace": "ch.ipt.handson.event",
@@ -110,9 +110,12 @@
     "doc": "A customer places an order.",
     "fields": [
       {
-        "name": "customer",
-        "doc": "Customer logged in.",
+        "name": "orderId",
         "type": "string"
+      },
+      {
+        "name": "customer",
+        "type": "ch.ipt.handson.event.Customer"
       },
       {
         "name": "books",
@@ -121,12 +124,15 @@
       {
         "name": "packet",
         "doc": "Packet ID.",
-        "type": "string"
+        "type": [
+          "null",
+          "string"
+        ]
       },
       {
         "name": "totalAmount",
         "doc": "Purchase total amount, in cents/Rappen.",
-        "type": "bytes"
+        "type": "int"
       }
     ]
   },
@@ -144,7 +150,7 @@
       {
         "name": "timestamp",
         "doc": "When event happened.",
-        "type": "bytes",
+        "type": "long",
         "logicalType": "timestamp-millis"
       },
       {
@@ -166,19 +172,19 @@
     "doc": "Payment info updated by bank via API, files, whatever.",
     "fields": [
       {
-        "name": "order",
-        "doc": "Order ID.",
-        "type": "string"
-      },
-      {
         "name": "transactionId",
         "doc": "Something that helps tracing back to individual payment transaction.",
         "type": "string"
       },
       {
+        "name": "order",
+        "doc": "Order ID.",
+        "type": "string"
+      },
+      {
         "name": "timestamp",
         "doc": "When transaction happened.",
-        "type": "bytes",
+        "type": "long",
         "logicalType": "timestamp-millis"
       },
       {
