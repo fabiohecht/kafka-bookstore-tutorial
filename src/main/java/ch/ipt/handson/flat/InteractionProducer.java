@@ -10,6 +10,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class InteractionProducer {
 
@@ -42,13 +43,13 @@ public class InteractionProducer {
     static final ScheduledExecutorService executor = Executors.newScheduledThreadPool(10);
 
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
         setUpProducer();
         produce();
     }
 
     private static void produce() {
-        int limit = 10;
+        int limit = Integer.MAX_VALUE;
         while (limit-- > 0) {
 
             Book book = getRandomBook();
@@ -132,7 +133,7 @@ public class InteractionProducer {
                 TOPIC_PAYMENT,
                 transactionId,
                 Payment.newBuilder()
-                        .setOrder(order.getOrderId())
+                        .setOrderId(order.getOrderId())
                         .setTransactionId(transactionId)
                         .setTimestamp(new Date().getTime())
                         .setAmount(order.getTotalAmount())
@@ -144,7 +145,7 @@ public class InteractionProducer {
     }
 
     private static double randomGaussian(double mean, double standardDeviation) {
-        return random.nextGaussian() * standardDeviation + mean;
+        return Math.max(0.0, random.nextGaussian() * standardDeviation + mean);
     }
 
     private static ProducerRecord<String, Order> getOrderRecord(Customer customer) {
@@ -163,16 +164,8 @@ public class InteractionProducer {
     private static Order buildOrder(String id, Customer customer, String packet, List<Book> shoppingCart) {
         return Order.newBuilder()
                 .setOrderId(id)
-                .setFirstname(customer.getFirstname())
-                .setLastname(customer.getLastname())
                 .setCustomerId(customer.getCustomerId())
-                .setEmail(customer.getEmail())
-                .setStreet(customer.getStreet())
-                .setNumber(customer.getNumber())
-                .setZip(customer.getZip())
-                .setCity(customer.getCity())
-                .setCountry(customer.getCountry())
-                .setBooks(new ArrayList<>())
+                .setBookIds(shoppingCart.stream().map(book -> book.getBookId()).collect(Collectors.toList()))
                 .setPacket(packet)
                 .setTotalAmount(shoppingCart.stream().map(book -> book.getPrice()).reduce((p0, p1) -> p0 + p1).orElse(0))
                 .build();
@@ -192,7 +185,7 @@ public class InteractionProducer {
                 TOPIC_WEBSITE_INTERACTION,
                 WebsiteInteraction.newBuilder()
                         .setCustomerEmail(customer.getEmail())
-                        .setId(book.getId())
+                        .setId(book.getBookId())
                         .setTitle(book.getTitle())
                         .setAuthors(book.getAuthors())
                         .setCategories(book.getCategories())

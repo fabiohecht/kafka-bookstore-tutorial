@@ -125,15 +125,15 @@ services:
     # The reason we check for readiness here is that we can insert a sleep time
     # for topic creation before we start the application.
     command: "bash -c 'echo Waiting for Kafka to be ready... && \
-                       cub kafka-ready -b kafka:29092 1 20 && \
+                       cub kafka-ready -b kafka:29092 1 30 && \
                        echo Waiting for Confluent Schema Registry to be ready... && \
-                       cub sr-ready schema-registry 8081 20 && \
+                       cub sr-ready schema-registry 8081 30 && \
                        echo Waiting a few seconds for topic creation to finish... && \
-                       sleep 2 && \
+                       sleep 20 && \
                        /usr/bin/ksql-server-start /etc/ksql/ksql-server.properties'"
     environment:
       KSQL_CONFIG_DIR: "/etc/ksql"
-      KSQL_OPTS: "-Dbootstrap.servers=kafka:29092 -Dksql.schema.registry.url=http://schema-registry:8081 -Dlisteners=http://0.0.0.0:8088"
+      KSQL_OPTS: "-Dbootstrap.servers=kafka:29092 -Dksql.schema.registry.url=http://schema-registry:8081 -Dlisteners=http://0.0.0.0:8088 -Dksql.streams.producer.retries=2147483647"
       KSQL_LOG4J_OPTS: "-Dlog4j.configuration=file:/etc/ksql/log4j-rolling.properties"
 
     extra_hosts:
@@ -147,8 +147,6 @@ services:
     depends_on:
       - kafka
       - schema-registry
-#      - ksql-datagen-pageviews
-#      - ksql-datagen-users
       - ksql-server
     command: "perl -e 'while(1){ sleep 99999 }'"
     environment:
@@ -171,6 +169,8 @@ services:
       PROXY: "true"
     depends_on:
       - schema-registry
+    extra_hosts:
+      - "moby:127.0.0.1"
 
   kafka-rest-proxy:
     image: confluentinc/cp-kafka-rest:4.1.0
@@ -187,6 +187,8 @@ services:
       - zookeeper
       - kafka
       - schema-registry
+    extra_hosts:
+      - "moby:127.0.0.1"
 
   kafka-topics-ui:
     image: landoop/kafka-topics-ui:latest
@@ -201,6 +203,8 @@ services:
       - kafka
       - schema-registry
       - kafka-rest-proxy
+    extra_hosts:
+      - "moby:127.0.0.1"
 
   kafka-connect:
     image: confluentinc/cp-kafka-connect:4.1.0
@@ -231,6 +235,8 @@ services:
       - kafka
       - schema-registry
       - kafka-rest-proxy
+    extra_hosts:
+      - "moby:127.0.0.1"
 
   kafka-connect-ui:
     image: landoop/kafka-connect-ui:latest
@@ -242,3 +248,18 @@ services:
       PROXY: "true"
     depends_on:
       - kafka-connect
+    extra_hosts:
+      - "moby:127.0.0.1"
+
+  mongo:
+      image: mongo
+
+  mongo-api:
+      image: aleksxp/docker-eve-python
+      ports:
+          - "5000:5000"
+      volumes:
+          - .:/usr/src/app
+      depends_on:
+          - mongo
+

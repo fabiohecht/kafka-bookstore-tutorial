@@ -26,7 +26,7 @@ public class BookProducer {
 
             System.out.println(book);
 
-            producer.send(new ProducerRecord(TOPIC_BOOK, book.getId(), book));
+            producer.send(new ProducerRecord(TOPIC_BOOK, book.getBookId(), book));
         }
         producer.close();
 

@@ -60,7 +60,7 @@ public class BooksCollection {
             }
 
             books.add(Book.newBuilder()
-                    .setId(id)
+                    .setBookId(id)
                     .setTitle(title)
                     .setAuthors(authors)
                     .setCategories(categories)

@@ -50,7 +50,7 @@
     "doc": "A book that can be viewed, ordered, etc.",
     "fields": [
       {
-        "name": "id",
+        "name": "bookId",
         "type": "string"
       },
       {
@@ -93,74 +93,10 @@
         "type": "int"
       },
       {
-        "name": "firstname",
-        "type": "string"
-      },
-      {
-        "name": "lastname",
-        "type": "string"
-      },
-      {
-        "name": "email",
-        "type": "string"
-      },
-      {
-        "name": "street",
-        "type": "string"
-      },
-      {
-        "name": "number",
-        "type": "string"
-      },
-      {
-        "name": "zip",
-        "type": "string"
-      },
-      {
-        "name": "city",
-        "type": "string"
-      },
-      {
-        "name": "country",
-        "type": "string"
-      },
-      {
-        "name": "id",
-        "type": "string"
-      },
-      {
-        "name": "books",
+        "name": "bookIds",
         "type": {
           "type": "array",
-          "items": {
-            "name": "Book2",
-            "type": "record",
-            "fields": [
-              {
-                "name": "title",
-                "type": "string"
-              },
-              {
-                "name": "authors",
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              {
-                "name": "categories",
-                "type": [
-                  "null",
-                  "string"
-                ]
-              },
-              {
-                "name": "price",
-                "doc": "Price in cents/Rappen.",
-                "type": "int"
-              }
-            ]
-          }
+          "items": "string"
         }
       },
       {
@@ -218,7 +154,7 @@
         "type": "string"
       },
       {
-        "name": "order",
+        "name": "orderId",
         "doc": "Order ID.",
         "type": "string"
       },

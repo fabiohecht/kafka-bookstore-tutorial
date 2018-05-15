@@ -43,7 +43,7 @@ public class InteractionProducer {
     static final ScheduledExecutorService executor = Executors.newScheduledThreadPool(10);
 
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
         setUpProducer();
         produce();
     }
