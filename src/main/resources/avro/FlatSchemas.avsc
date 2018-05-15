@@ -1,0 +1,290 @@
+[
+  {
+    "namespace": "ch.ipt.handson.flat",
+    "name": "Customer",
+    "type": "record",
+    "doc": "A customer.",
+    "fields": [
+      {
+        "name": "customerId",
+        "type": "int"
+      },
+      {
+        "name": "firstname",
+        "type": "string"
+      },
+      {
+        "name": "lastname",
+        "type": "string"
+      },
+      {
+        "name": "email",
+        "type": "string"
+      },
+      {
+        "name": "street",
+        "type": "string"
+      },
+      {
+        "name": "number",
+        "type": "string"
+      },
+      {
+        "name": "zip",
+        "type": "string"
+      },
+      {
+        "name": "city",
+        "type": "string"
+      },
+      {
+        "name": "country",
+        "type": "string"
+      }
+    ]
+  },
+  {
+    "namespace": "ch.ipt.handson.flat",
+    "name": "Book",
+    "type": "record",
+    "doc": "A book that can be viewed, ordered, etc.",
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "name": "authors",
+        "type": [
+          "null",
+          "string"
+        ]
+      },
+      {
+        "name": "categories",
+        "type": [
+          "null",
+          "string"
+        ]
+      },
+      {
+        "name": "price",
+        "doc": "Price in cents/Rappen.",
+        "type": "int"
+      }
+    ]
+  },
+  {
+    "namespace": "ch.ipt.handson.flat",
+    "name": "Order",
+    "type": "record",
+    "doc": "A customer places an order.",
+    "fields": [
+      {
+        "name": "orderId",
+        "type": "string"
+      },
+      {
+        "name": "customerId",
+        "type": "int"
+      },
+      {
+        "name": "firstname",
+        "type": "string"
+      },
+      {
+        "name": "lastname",
+        "type": "string"
+      },
+      {
+        "name": "email",
+        "type": "string"
+      },
+      {
+        "name": "street",
+        "type": "string"
+      },
+      {
+        "name": "number",
+        "type": "string"
+      },
+      {
+        "name": "zip",
+        "type": "string"
+      },
+      {
+        "name": "city",
+        "type": "string"
+      },
+      {
+        "name": "country",
+        "type": "string"
+      },
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "books",
+        "type": {
+          "type": "array",
+          "items": {
+            "name": "Book2",
+            "type": "record",
+            "fields": [
+              {
+                "name": "title",
+                "type": "string"
+              },
+              {
+                "name": "authors",
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              {
+                "name": "categories",
+                "type": [
+                  "null",
+                  "string"
+                ]
+              },
+              {
+                "name": "price",
+                "doc": "Price in cents/Rappen.",
+                "type": "int"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "packet",
+        "doc": "Packet ID.",
+        "type": [
+          "null",
+          "string"
+        ]
+      },
+      {
+        "name": "totalAmount",
+        "doc": "Purchase total amount, in cents/Rappen.",
+        "type": "int"
+      }
+    ]
+  },
+  {
+    "namespace": "ch.ipt.handson.flat",
+    "name": "Shipping",
+    "type": "record",
+    "doc": "Shipping data updated by shipping partner (Swiss post) via API.",
+    "fields": [
+      {
+        "name": "packet",
+        "doc": "Packet ID.",
+        "type": "string"
+      },
+      {
+        "name": "timestamp",
+        "doc": "When event happened.",
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      },
+      {
+        "name": "status",
+        "type": "string",
+        "enum": [
+          "underway",
+          "lost",
+          "delivered"
+        ]
+      }
+    ]
+  },
+  {
+    "namespace": "ch.ipt.handson.flat",
+    "name": "Payment",
+    "type": "record",
+    "doc": "Payment info updated by bank via API, files, whatever.",
+    "fields": [
+      {
+        "name": "transactionId",
+        "doc": "Something that helps tracing back to individual payment transaction.",
+        "type": "string"
+      },
+      {
+        "name": "order",
+        "doc": "Order ID.",
+        "type": "string"
+      },
+      {
+        "name": "timestamp",
+        "doc": "When transaction happened.",
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      },
+      {
+        "name": "amount",
+        "doc": "Amount paid in cents/Rappen.",
+        "type": "int"
+      }
+    ]
+  },
+  {
+    "namespace": "ch.ipt.handson.flat",
+    "name": "WebsiteInteraction",
+    "type": "record",
+    "doc": "A customer interacts with website.",
+    "fields": [
+      {
+        "name": "customerEmail",
+        "doc": "Customer logged in (if logged in).",
+        "type": [
+          "null",
+          "string"
+        ]
+      },
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "name": "authors",
+        "type": [
+          "null",
+          "string"
+        ]
+      },
+      {
+        "name": "categories",
+        "type": [
+          "null",
+          "string"
+        ]
+      },
+      {
+        "name": "price",
+        "doc": "Price in cents/Rappen.",
+        "type": "int"
+      },
+      {
+        "name": "event",
+        "type": "string",
+        "enum": [
+          "view",
+          "cart",
+          "order"
+        ]
+      }
+    ]
+  }
+]
