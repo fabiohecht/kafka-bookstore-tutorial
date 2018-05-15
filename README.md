@@ -26,3 +26,21 @@ ksql> CREATE STREAM INTERACTION with (kafka_topic='interaction', VALUE_FORMAT='A
 </code>
 
 ls
+
+
+
+==how to run==
+
+in src/main/docker-compose
+
+- have a look at all components
+
+Landoop Kafka Connect UI http://localhost:8000/#/
+
+
+docker-compose up -d
+
+docker ps
+
+docker logs [name]
+
