@@ -208,14 +208,6 @@
         ]
       },
       {
-        "name": "session",
-        "doc": "Browser session.",
-        "type": [
-          "null",
-          "string"
-        ]
-      },
-      {
         "name": "book",
         "doc": "Book viewed, added to cart, etc.",
         "type": "ch.ipt.handson.event.Book"

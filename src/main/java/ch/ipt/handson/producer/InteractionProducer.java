@@ -20,7 +20,8 @@ public class InteractionProducer {
     public static final String TOPIC_SHIPPING = "shipping";
 
 
-    public static final double VIEWS_PER_SECOND = 100.0;
+    public static final double MEAN_VIEWS_PER_SECOND = 2.0;
+    public static final double STDEV_VIEWS_PER_SECOND = 1.0;
     public static final double CART_ODDS = .5;
     public static final double ORDER_ODDS = .2;
     public static final int MEAN_PAYMENT_TIME_SECONDS = 60;
@@ -37,7 +38,7 @@ public class InteractionProducer {
     static private Random random = new Random();
     static final Map<Customer, ShoppingCart> carts = new HashMap<>();
 
-    static final RateLimiter rateLimiter = RateLimiter.create(VIEWS_PER_SECOND);
+    static final RateLimiter rateLimiter = RateLimiter.create(randomGaussian(MEAN_VIEWS_PER_SECOND, STDEV_VIEWS_PER_SECOND));
 
     static final ScheduledExecutorService executor = Executors.newScheduledThreadPool(10);
 
@@ -48,7 +49,8 @@ public class InteractionProducer {
     }
 
     private static void produce() {
-        while (true) {
+        int limit = 10;
+        while (limit-- > 0) {
 
             Book book = getRandomBook();
             Customer customer = getRandomCustomer();
@@ -187,14 +189,9 @@ public class InteractionProducer {
                 WebsiteInteraction.newBuilder()
                         .setCustomerEmail(customer.getEmail())
                         .setBook(book)
-                        .setSession("whatever")
                         .setEvent(event)
                         .build());
     }
-
-//    private static Session getRandomOpenSession() {
-//        return Sessions.getOpenSession().get(random.nextInt(CustomersCollection.getCustomers().size()));
-//    }
 
     private static Customer getRandomCustomer() {
         return CustomersCollection.getCustomers().get(random.nextInt(CustomersCollection.getCustomers().size()));
@@ -203,37 +200,6 @@ public class InteractionProducer {
     private static Book getRandomBook() {
         return BooksCollection.getBooks().get(random.nextInt(BooksCollection.getBooks().size()));
     }
-
-//        ArrayList<String> employees = new ArrayList<String>();
-//        ArrayList<String> description = new ArrayList<String>();
-//        ArrayList<String> expenses = new ArrayList<String>();
-//
-//        // Randoms for picking value out of ArrayLists
-//        Random random_employee = new Random();
-//        Random random_description = new Random();
-//
-//        // Max value of random generated number
-//        int maxexpensevalue = 1000;
-//
-//        // Topic to produce to
-//
-//        // Time to sleep in ms
-//        int timetosleep = 5000;
-
-    // Create new property
-
-
-//
-//        Click
-//        Producer<String, Click> producer = new org.apache.kafka.clients.producer.KafkaProducer<>(properties);
-//
-//        // Fill ArrayLists with values
-//        Collections.addAll(employees, "RKO","DAL","PGR","DAL","SHU","TIN","LKE","TSC","ASH","FHE");
-//        Collections.addAll(description, "Mittagessen","Abendessen","Training","Bahn","Geschäftsauto","Wochenunterkunft","Flug","Hotel","BYO");
-//
-    // Do every x milliseconds
-
-
     private static void setUpProducer() {
         producer = new KafkaProducer(GlobalConfiguration.getProducerCOnfig());
     }
