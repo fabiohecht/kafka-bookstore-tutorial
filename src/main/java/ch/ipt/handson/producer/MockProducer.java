@@ -1,10 +1,11 @@
-package ch.ipt.handson.flat;
+package ch.ipt.handson.producer;
 
 import com.google.common.util.concurrent.RateLimiter;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import ch.ipt.handson.model.*;
 
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -12,16 +13,15 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class InteractionProducer {
+public class MockProducer {
 
-    public static final String TOPIC_WEBSITE_INTERACTION = "interaction-flat";
-    public static final String TOPIC_ORDER = "order-flat";
-    public static final String TOPIC_PAYMENT = "payment-flat";
-    public static final String TOPIC_SHIPPING = "shipping-flat";
+    public static final String TOPIC_WEBSITE_INTERACTION = "interaction";
+    public static final String TOPIC_ORDER = "purchase";
+    public static final String TOPIC_PAYMENT = "payment";
+    public static final String TOPIC_SHIPPING = "shipping";
 
 
-    public static final double MEAN_VIEWS_PER_SECOND = 2.0;
-    public static final double STDEV_VIEWS_PER_SECOND = 1.0;
+    public static final double VIEWS_PER_SECOND = 2.0;
     public static final double CART_ODDS = .5;
     public static final double ORDER_ODDS = .2;
     public static final int MEAN_PAYMENT_TIME_SECONDS = 60;
@@ -38,7 +38,7 @@ public class InteractionProducer {
     static private Random random = new Random();
     static final Map<Customer, List<Book>> carts = new HashMap<>();
 
-    static final RateLimiter rateLimiter = RateLimiter.create(randomGaussian(MEAN_VIEWS_PER_SECOND, STDEV_VIEWS_PER_SECOND));
+    static final RateLimiter rateLimiter = RateLimiter.create(VIEWS_PER_SECOND);
 
     static final ScheduledExecutorService executor = Executors.newScheduledThreadPool(10);
 
@@ -73,13 +73,13 @@ public class InteractionProducer {
                     producer.send(cartRecord);
                     System.out.println("iORDER " + orderInteractionRecord);
 
-                    ProducerRecord<String, Order> orderRecord = getOrderRecord(customer);
+                    ProducerRecord<String, Purchase> orderRecord = getPurchaseRecord(customer);
                     producer.send(orderRecord);
                     System.out.println("ORDER " + orderRecord);
 
                     carts.remove(customer);
 
-                    executor.schedule(() -> produceOrderPayment(orderRecord.value()), Math.round(randomGaussian(MEAN_PAYMENT_TIME_SECONDS, STDEV_PAYMENT_TIME_SECONDS)), TimeUnit.SECONDS);
+                    executor.schedule(() -> producePurchasePayment(orderRecord.value()), Math.round(randomGaussian(MEAN_PAYMENT_TIME_SECONDS, STDEV_PAYMENT_TIME_SECONDS)), TimeUnit.SECONDS);
                 }
             }
             rateLimiter.acquire();
@@ -87,12 +87,12 @@ public class InteractionProducer {
 
     }
 
-    private static void produceOrderShipping(Order order) {
+    private static void producePurchaseShipping(Purchase order) {
         String packet = RandomStringUtils.random(10, true, true);
         order.setPacket(packet);
 
         //we update order with packet id
-        ProducerRecord<String, Order> orderRecordWithPacket = getOrderRecord(order);
+        ProducerRecord<String, Purchase> orderRecordWithPacket = getPurchaseRecord(order);
         producer.send(orderRecordWithPacket);
 
         //post sends status "underway"
@@ -127,13 +127,13 @@ public class InteractionProducer {
         );
     }
 
-    private static void produceOrderPayment(Order order) {
+    private static void producePurchasePayment(Purchase order) {
         String transactionId = UUID.randomUUID().toString();
         ProducerRecord paymentRecord = new ProducerRecord<>(
                 TOPIC_PAYMENT,
                 transactionId,
                 Payment.newBuilder()
-                        .setOrderId(order.getOrderId())
+                        .setReferenceNumber(order.getPurchaseId())
                         .setTransactionId(transactionId)
                         .setTimestamp(new Date().getTime())
                         .setAmount(order.getTotalAmount())
@@ -141,29 +141,29 @@ public class InteractionProducer {
         producer.send(paymentRecord);
         System.out.println("PAY " + paymentRecord);
 
-        executor.schedule(() -> produceOrderShipping(order), Math.round(randomGaussian(MEAN_SHIPPING_TIME_SECONDS, STDEV_SHIPPING_TIME_SECONDS)), TimeUnit.SECONDS);
+        executor.schedule(() -> producePurchaseShipping(order), Math.round(randomGaussian(MEAN_SHIPPING_TIME_SECONDS, STDEV_SHIPPING_TIME_SECONDS)), TimeUnit.SECONDS);
     }
 
     private static double randomGaussian(double mean, double standardDeviation) {
         return Math.max(0.0, random.nextGaussian() * standardDeviation + mean);
     }
 
-    private static ProducerRecord<String, Order> getOrderRecord(Customer customer) {
+    private static ProducerRecord<String, Purchase> getPurchaseRecord(Customer customer) {
         String id = UUID.randomUUID().toString();
-        Order order = buildOrder(id, customer, null, carts.get(customer));
-        return getOrderRecord(order);
+        Purchase order = buildPurchase(id, customer, null, carts.get(customer));
+        return getPurchaseRecord(order);
     }
 
-    private static ProducerRecord<String, Order> getOrderRecord(Order order) {
+    private static ProducerRecord<String, Purchase> getPurchaseRecord(Purchase order) {
         return new ProducerRecord<>(
                 TOPIC_ORDER,
-                order.getOrderId(),
+                order.getPurchaseId(),
                 order);
     }
 
-    private static Order buildOrder(String id, Customer customer, String packet, List<Book> shoppingCart) {
-        return Order.newBuilder()
-                .setOrderId(id)
+    private static Purchase buildPurchase(String id, Customer customer, String packet, List<Book> shoppingCart) {
+        return Purchase.newBuilder()
+                .setPurchaseId(id)
                 .setCustomerId(customer.getCustomerId())
                 .setBookIds(shoppingCart.stream().map(book -> book.getBookId()).collect(Collectors.toList()))
                 .setPacket(packet)
@@ -183,6 +183,7 @@ public class InteractionProducer {
     private static ProducerRecord<String, WebsiteInteraction> getInteractionRecord(Book book, Customer customer, String event) {
         return new ProducerRecord<>(
                 TOPIC_WEBSITE_INTERACTION,
+                UUID.randomUUID().toString(),
                 WebsiteInteraction.newBuilder()
                         .setCustomerEmail(customer.getEmail())
                         .setId(book.getBookId())

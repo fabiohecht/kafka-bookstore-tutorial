@@ -1,7 +1,6 @@
 package ch.ipt.handson.producer;
 
-import ch.ipt.handson.event.Address;
-import ch.ipt.handson.event.Customer;
+import ch.ipt.handson.model.Customer;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
@@ -39,12 +38,11 @@ public class CustomersCollection {
                     .setLastname(customerObject.get("last_name").asString())
                     .setCustomerId(customerObject.get("id").asInt())
                     .setEmail(customerObject.get("email").asString())
-                    .setAddressBuilder(Address.newBuilder()
-                            .setStreet(customerObject.get("street").asString())
-                            .setNumber(customerObject.get("number").asString())
-                            .setZip(customerObject.get("zip").asString())
-                            .setCity(customerObject.get("city").asString())
-                            .setCountry(customerObject.get("country").asString()))
+                    .setStreet(customerObject.get("street").asString())
+                    .setNumber(customerObject.get("number").asString())
+                    .setZip(customerObject.get("zip").asString())
+                    .setCity(customerObject.get("city").asString())
+                    .setCountry(customerObject.get("country").asString())
                     .build());
         }
     }

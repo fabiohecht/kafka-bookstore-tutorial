@@ -1,6 +1,6 @@
 [
   {
-    "namespace": "ch.ipt.handson.event",
+    "namespace": "ch.ipt.handson.model",
     "name": "Customer",
     "type": "record",
     "doc": "A customer.",
@@ -22,46 +22,35 @@
         "type": "string"
       },
       {
-        "name": "address",
-        "type": {
-          "namespace": "ch.ipt.handson.event",
-          "name": "Address",
-          "type": "record",
-          "doc": "A street address.",
-          "fields": [
-            {
-              "name": "street",
-              "type": "string"
-            },
-            {
-              "name": "number",
-              "type": "string"
-            },
-            {
-              "name": "zip",
-              "type": "string"
-            },
-            {
-              "name": "city",
-              "type": "string"
-            },
-            {
-              "name": "country",
-              "type": "string"
-            }
-          ]
-        }
+        "name": "street",
+        "type": "string"
+      },
+      {
+        "name": "number",
+        "type": "string"
+      },
+      {
+        "name": "zip",
+        "type": "string"
+      },
+      {
+        "name": "city",
+        "type": "string"
+      },
+      {
+        "name": "country",
+        "type": "string"
       }
     ]
   },
   {
-    "namespace": "ch.ipt.handson.event",
+    "namespace": "ch.ipt.handson.model",
     "name": "Book",
     "type": "record",
     "doc": "A book that can be viewed, ordered, etc.",
     "fields": [
       {
-        "name": "id",
+        "name": "bookId",
         "type": "string"
       },
       {
@@ -90,36 +79,25 @@
     ]
   },
   {
-    "namespace": "ch.ipt.handson.event",
-    "name": "ShoppingCart",
-    "type": "record",
-    "fields": [
-      {
-        "name": "books",
-        "type": {
-          "type": "array",
-          "items": "ch.ipt.handson.event.Book"
-        }
-      }
-    ]
-  },
-  {
-    "namespace": "ch.ipt.handson.event",
-    "name": "Order",
+    "namespace": "ch.ipt.handson.model",
+    "name": "Purchase",
     "type": "record",
     "doc": "A customer places an order.",
     "fields": [
       {
-        "name": "orderId",
+        "name": "purchaseId",
         "type": "string"
       },
       {
-        "name": "customer",
-        "type": "ch.ipt.handson.event.Customer"
+        "name": "customerId",
+        "type": "int"
       },
       {
-        "name": "books",
-        "type": "ch.ipt.handson.event.ShoppingCart"
+        "name": "bookIds",
+        "type": {
+          "type": "array",
+          "items": "string"
+        }
       },
       {
         "name": "packet",
@@ -137,7 +115,7 @@
     ]
   },
   {
-    "namespace": "ch.ipt.handson.event",
+    "namespace": "ch.ipt.handson.model",
     "name": "Shipping",
     "type": "record",
     "doc": "Shipping data updated by shipping partner (Swiss post) via API.",
@@ -165,7 +143,7 @@
     ]
   },
   {
-    "namespace": "ch.ipt.handson.event",
+    "namespace": "ch.ipt.handson.model",
     "name": "Payment",
     "type": "record",
     "doc": "Payment info updated by bank via API, files, whatever.",
@@ -176,8 +154,8 @@
         "type": "string"
       },
       {
-        "name": "order",
-        "doc": "Order ID.",
+        "name": "referenceNumber",
+        "doc": "Purchase ID.",
         "type": "string"
       },
       {
@@ -194,7 +172,7 @@
     ]
   },
   {
-    "namespace": "ch.ipt.handson.event",
+    "namespace": "ch.ipt.handson.model",
     "name": "WebsiteInteraction",
     "type": "record",
     "doc": "A customer interacts with website.",
@@ -208,17 +186,38 @@
         ]
       },
       {
-        "name": "book",
-        "doc": "Book viewed, added to cart, etc.",
-        "type": "ch.ipt.handson.event.Book"
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "title",
+        "type": "string"
+      },
+      {
+        "name": "authors",
+        "type": [
+          "null",
+          "string"
+        ]
+      },
+      {
+        "name": "categories",
+        "type": [
+          "null",
+          "string"
+        ]
+      },
+      {
+        "name": "price",
+        "doc": "Price in cents/Rappen.",
+        "type": "int"
       },
       {
         "name": "event",
         "type": "string",
         "enum": [
           "view",
-          "cart",
-          "order"
+          "cart"
         ]
       }
     ]

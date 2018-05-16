@@ -1,6 +1,6 @@
 package ch.ipt.handson.producer;
 
-import ch.ipt.handson.event.Book;
+import ch.ipt.handson.model.*;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -27,7 +27,7 @@ public class BookProducer {
 
             System.out.println(book);
 
-            producer.send(new ProducerRecord(TOPIC_BOOK, book.getId(), book));
+            producer.send(new ProducerRecord(TOPIC_BOOK, book.getBookId(), book));
         }
         producer.close();
 

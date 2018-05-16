@@ -1,11 +1,11 @@
 package ch.ipt.handson.producer;
 
-import ch.ipt.handson.event.Book;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 
+import ch.ipt.handson.model.*;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -61,7 +61,7 @@ public class BooksCollection {
             }
 
             books.add(Book.newBuilder()
-                    .setId(id)
+                    .setBookId(id)
                     .setTitle(title)
                     .setAuthors(authors)
                     .setCategories(categories)
