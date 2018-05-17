@@ -1,53 +1,40 @@
-# kafka-mock-event-producer
-A Kafka Producer that produces random events.
+# IPT-Confluent Workshop—Kafka Bookstore Tutorial
 
-
-Prerequisites
--------------
-
-**Prerequisites:**
+## Prerequisites
 
 - Docker
     - `macOS <https://docs.docker.com/docker-for-mac/install/>`__
     - `All platforms <https://docs.docker.com/engine/installation/>`__
 - `Git <https://git-scm.com/downloads>`__
 
-
-Running Platform
-----------------
+## Running Platform
 
 Your choice: Local docker images (hopefully download time is OK) or use shared infrastructure in AWS.
 
-Local
------
+### Local
 
-- Docker and Docker Compose must be installed and configured with at least 4 GB of memory.
- - [Mac OS|https://docs.docker.com/docker-for-mac/install/]
- - Other OSs [https://docs.docker.com/engine/installation/]
-- Git
+* Docker and Docker Compose must be installed and configured with at least 4 GB of memory.
+    * [Mac OS|https://docs.docker.com/docker-for-mac/install/]
+    * Other OSs [https://docs.docker.com/engine/installation/]
+* Git
 
+In src/main/docker-compose:
 
-in src/main/docker-compose
+    docker-compose up -d
+    docker ps
+    docker logs [name]
 
+## KSQL
 
+Launch the KSQL cli:
 
-docker-compose up -d
+    docker exec -it dockercompose_ksql-cli_1 ksql http://ksql-server:8088
 
-docker ps
-
-docker logs [name]
-
-KSQL
-----
-
-docker exec -it dockercompose_ksql-cli_1 ksql http://ksql-server:8088
 or
-docker-compose exec ksql-cli ksql http://ksql-server:8088
 
+    docker-compose exec ksql-cli ksql http://ksql-server:8088
 
-== KSQL
-
-=== Explore topics
+### Explore topics
 
     SHOW TOPICS;
     PRINT 'interaction' FROM BEGINNING;
@@ -60,9 +47,7 @@ If the Java producer is running, then run:
 
 to see a live feed of messages being added to the topic (note the ommission of `FROM BEGINNING`)
 
-
-
-=== Register stream and tables
+### Register stream and tables
 
     CREATE TABLE BOOK with (kafka_topic='book', VALUE_FORMAT='AVRO', key='bookId');
     CREATE TABLE CUSTOMER with (kafka_topic='customer', VALUE_FORMAT='AVRO', key='customerId');
@@ -73,7 +58,7 @@ to see a live feed of messages being added to the topic (note the ommission of `
     CREATE STREAM PURCHASE_STREAM with (kafka_topic='purchase', VALUE_FORMAT='AVRO');
     CREATE STREAM PAYMENT_STREAM with (kafka_topic='payment', VALUE_FORMAT='AVRO');
 
-=== Explore objects
+### Explore objects
 
     describe interaction;
 
@@ -81,7 +66,7 @@ to see a live feed of messages being added to the topic (note the ommission of `
     SELECT * FROM INTERACTION LIMIT 5;
 
 
-=== How many views have there been per category, per 30 second window?
+### How many views have there been per category, per 30 second window?
 
     CREATE TABLE pageviews_categories AS \
     SELECT categories , COUNT(*) AS num_views \
@@ -101,7 +86,7 @@ to see a live feed of messages being added to the topic (note the ommission of `
     2018-05-17 14:57:00 | Authors, Austrian | 4
     2018-05-17 14:57:00 | Grotesque in literature | 1
 
-=== For each purchase, which books were bought?
+### For each purchase, which books were bought?
 
 Purchase data:
 
@@ -127,7 +112,7 @@ Can't be done in KSQL: would need to explode the nested bookIds object in order 
 
 --> Do an example of Kafka Streams code here ?
 
-=== For each purchase, add customer details
+### For each purchase, add customer details
 
 Sample Purchase data:
 
@@ -148,7 +133,7 @@ Persist this enriched stream, for external use and subsequent processing
 
     CREATE STREAM Purchase_enriched AS SELECT P.purchaseId, p.totalAmount, c.firstname + ' ' + c.lastname as full_name, c.email, c.city, c.country FROM PURCHASE_STREAM p LEFT JOIN CUSTOMER c on p.customerId=c.customerId;
 
-=== What's the geographical distribution by city of orders placed by 30 minute window?
+### What's the geographical distribution by city of orders placed by 30 minute window?
 
     ksql> SELECT city,COUNT(*) FROM Purchase_enriched WINDOW TUMBLING (SIZE 30 MINUTES) GROUP BY city;
 
@@ -178,13 +163,13 @@ Query it:
     2018-05-17 20:30:00 | Poitiers | 1
     2018-05-17 20:30:00 | Le Mans | 1
 
-=== Trigger an event if a purchase is made over a given value
+### Trigger an event if a purchase is made over a given value
 
     CREATE STREAM BIG_PURCHASE AS SELECT * FROM PURCHASE_STREAM WHERE totalAmount>30000;
 
 The resulting Kafka topic could be used to drive fraud checks, automatically hold orders, etc.
 
-=== Denormalise orders with customer, books, shipping, and payments
+### Denormalise orders with customer, books, shipping, and payments
 
 Goal is to "sink connect" to mongo, so data can be queried by api client.
 
@@ -212,7 +197,7 @@ SELECT * FROM purchase left join shipping ON shipping.packet = purchase.packet;
 Unsupported Join. Only stream-table joins are supported, but was io.confluent.ksql.planner.plan.StructuredDataSourceNode@473cd960-io.confluent.ksql.planner.plan.StructuredDataSourceNode@7fdb958
 ```
 
-=== What the total value of payments, per 5 second window?
+### What the total value of payments, per 5 second window?
 
 (https://github.com/confluentinc/ksql/issues/430)
 
@@ -225,13 +210,13 @@ Unsupported Join. Only stream-table joins are supported, but was io.confluent.ks
     2018-05-17 21:36:55 | 42051
     2018-05-17 21:37:00 | 10700
 
-=== Which payments have been received for which purchases?
+### Which payments have been received for which purchases?
 
 This is a stream-stream join, and not yet supported in KSQL
 
 --> Do an example of Kafka Streams code here?
 
-=== Amount outstanding (i.e. amount ordered but not yet paid
+### Amount outstanding (i.e. amount ordered but not yet paid
 
 This is a stream-stream join, and not yet supported in KSQL
 
@@ -239,22 +224,74 @@ This is a stream-stream join, and not yet supported in KSQL
 
 **average time from ordered to paid, shipped, and received: where can we optimize?**
 
-=== Analytics: views per book
+### Analytics: views per book
 
-ksql> select b.title, count(*) as view_count from interaction i left join book b on i.Id = b.bookId where i.event='view' group by b.title;
-Fremdheit in Kafkas Werken und Kafkas Wirkung auf die persische moderne Literatur | 34
-'Vor dem Gesetz' - Jacques Derridas Kafka-Lektüre | 23
-In der Strafkolonie | 59
-Kafka und Prag | 72
+    ksql> select b.title, count(*) as view_count from interaction i left join book b on i.Id = b.bookId where i.event='view' group by b.title;
+    Fremdheit in Kafkas Werken und Kafkas Wirkung auf die persische moderne Literatur | 34
+    'Vor dem Gesetz' - Jacques Derridas Kafka-Lektüre | 23
+    In der Strafkolonie | 59
+    Kafka und Prag | 72
 
-== KSQL reference
+Persist as a table:
+
+    CREATE TABLE VIEWS_PER_BOOK AS select b.title, count(*) as view_count from interaction i left join book b on i.Id = b.bookId where i.event='view' group by b.title;
+
+## Kafka Connect to stream data to Mongo and Elasticsearch
+
+Elasticsearch connector is installed with Confluent Open Source by default. Create a mapping template:
+
+    curl -XPUT "http://localhost:9200/_template/kafkaconnect/" -H 'Content-Type: application/json' -d'{"index_patterns":"*","settings":{"number_of_shards":1,"number_of_replicas":0},"mappings":{"_default_":{"dynamic_templates":[{"dates":{"match":"EXTRACT_TS","mapping":{"type":"date"}}},{"non_analysed_string_template":{"match":"*","match_mapping_type":"string","mapping":{"type":"keyword"}}}]}}}'
+
+Create a connector that streams the enriched purchase/customer data to Elasticsearch:
+
+    curl -X "POST" "http://kafkaconnect:8083/connectors/" \
+         -H "Content-Type: application/json" \
+         -d '{
+      "name": "es_sink_PURCHASE_ENRICHED",
+      "config": {
+        "topics": "PURCHASE_ENRICHED",
+        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+        "key.ignore": "true",
+        "schema.ignore": "false",
+        "type.name": "type.name=kafkaconnect",
+        "topic.index.map": "PURCHASE_ENRICHED:purchase_enriched",
+        "connection.url": "http://localhost:9200",
+        "transforms": "ExtractTimestamp",
+        "transforms.ExtractTimestamp.type": "org.apache.kafka.connect.transforms.InsertField$Value",
+        "transforms.ExtractTimestamp.timestamp.field" : "EXTRACT_TS"
+      }
+    }'
+
+Create a connector that streams the book view count to Elasticsearch
+
+    curl -X "POST" "http://kafkaconnect:8083/connectors/" \
+         -H "Content-Type: application/json" \
+         -d '{
+      "name": "es_sink_VIEWS_PER_BOOK",
+      "config": {
+        "topics": "VIEWS_PER_BOOK",
+        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+        "key.ignore": "true",
+        "schema.ignore": "false",
+        "type.name": "type.name=kafkaconnect",
+        "topic.index.map": "VIEWS_PER_BOOK:views_per_book",
+        "connection.url": "http://localhost:9200",
+        "transforms": "ExtractTimestamp",
+        "transforms.ExtractTimestamp.type": "org.apache.kafka.connect.transforms.InsertField$Value",
+        "transforms.ExtractTimestamp.timestamp.field" : "EXTRACT_TS"
+      }
+    }'
+
+
+## KSQL reference
 
 * https://www.confluent.io/product/ksql/
 * [KSQL docs][3]
 * [KSQL syntax reference][4]
 * [KSQL Quickstart tutorial][5]
 * [KSQL video tutorials][6]
-
 
   [3]: https://docs.confluent.io/current/ksql/docs/index.html#ksql-home
   [4]: https://docs.confluent.io/current/ksql/docs/syntax-reference.html
