@@ -24,6 +24,12 @@ In src/main/docker-compose:
     docker ps
     docker logs [name]
 
+## Sourcing data
+
+TODO: Document how to get the java app running
+
+TODO: Put the customer and book data in mysql/postgres and set up debezium to CDC it across (can then demo realtime changes of data in DB reflecting in Kafka + KSQL processing)
+
 ## KSQL
 
 Launch the KSQL cli:
@@ -244,7 +250,7 @@ Elasticsearch connector is installed with Confluent Open Source by default. Crea
 
 Create a connector that streams the enriched purchase/customer data to Elasticsearch:
 
-    curl -X "POST" "http://kafkaconnect:8083/connectors/" \
+    curl -X "POST" "http://localhost:8083/connectors/" \
          -H "Content-Type: application/json" \
          -d '{
       "name": "es_sink_PURCHASE_ENRICHED",
