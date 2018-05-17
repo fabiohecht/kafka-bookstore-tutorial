@@ -51,65 +51,6 @@ services:
     extra_hosts:
       - "moby:127.0.0.1"
 
-#  # Runs the Kafka KSQL data generator for topic called "pageviews"
-#  ksql-datagen-pageviews:
-#    image: "confluentinc/ksql-examples:5.0.0-beta1"
-#    hostname: ksql-datagen-pageviews
-#    depends_on:
-#      - kafka
-#      - schema-registry
-#    # Note: The container's `run` script will perform the same readiness checks
-#    # for Kafka and Confluent Schema Registry, but that's ok because they complete fast.
-#    # The reason we check for readiness here is that we can insert a sleep time
-#    # for topic creation before we start the application.
-#    command: "bash -c 'echo Waiting for Kafka to be ready... && \
-#                       cub kafka-ready -b kafka:29092 1 20 && \
-#                       echo Waiting for Confluent Schema Registry to be ready... && \
-#                       cub sr-ready schema-registry 8081 20 && \
-#                       echo Waiting a few seconds for topic creation to finish... && \
-#                       sleep 2 && \
-#                       java -jar /usr/share/java/ksql-examples/ksql-examples-5.0.0-SNAPSHOT-standalone.jar
-#                       quickstart=pageviews format=delimited topic=pageviews bootstrap-server=kafka:29092 maxInterval=100 iterations=1000 && \
-#                       java -jar /usr/share/java/ksql-examples/ksql-examples-5.0.0-SNAPSHOT-standalone.jar
-#                       quickstart=pageviews format=delimited topic=pageviews bootstrap-server=kafka:29092 maxInterval=1000'"
-#    environment:
-#      KSQL_CONFIG_DIR: "/etc/ksql"
-#      KSQL_LOG4J_OPTS: "-Dlog4j.configuration=file:/etc/ksql/log4j-rolling.properties"
-#      STREAMS_BOOTSTRAP_SERVERS: kafka:29092
-#      STREAMS_SCHEMA_REGISTRY_HOST: schema-registry
-#      STREAMS_SCHEMA_REGISTRY_PORT: 8081
-#    extra_hosts:
-#      - "moby:127.0.0.1"
-#
-#  # Runs the Kafka KSQL data generator for topic called "users"
-#  ksql-datagen-users:
-#    image: "confluentinc/ksql-examples:5.0.0-beta1"
-#    hostname: ksql-datagen-users
-#    depends_on:
-#      - kafka
-#      - schema-registry
-#    # Note: The container's `run` script will perform the same readiness checks
-#    # for Kafka and Confluent Schema Registry, but that's ok because they complete fast.
-#    # The reason we check for readiness here is that we can insert a sleep time
-#    # for topic creation before we start the application.
-#    command: "bash -c 'echo Waiting for Kafka to be ready... && \
-#                       cub kafka-ready -b kafka:29092 1 20 && \
-#                       echo Waiting for Confluent Schema Registry to be ready... && \
-#                       cub sr-ready schema-registry 8081 20 && \
-#                       echo Waiting a few seconds for topic creation to finish... && \
-#                       sleep 2 && \
-#                       java -jar /usr/share/java/ksql-examples/ksql-examples-5.0.0-SNAPSHOT-standalone.jar
-#                       quickstart=users format=json topic=users bootstrap-server=kafka:29092 maxInterval=100 iterations=1000 && \
-#                       java -jar /usr/share/java/ksql-examples/ksql-examples-5.0.0-SNAPSHOT-standalone.jar
-#                       quickstart=users format=json topic=users bootstrap-server=kafka:29092 maxInterval=1000'"
-#    environment:
-#      KSQL_CONFIG_DIR: "/etc/ksql"
-#      KSQL_LOG4J_OPTS: "-Dlog4j.configuration=file:/etc/ksql/log4j-rolling.properties"
-#      STREAMS_BOOTSTRAP_SERVERS: kafka:29092
-#      STREAMS_SCHEMA_REGISTRY_HOST: schema-registry
-#      STREAMS_SCHEMA_REGISTRY_PORT: 8081
-#    extra_hosts:
-#      - "moby:127.0.0.1"
 
   # Runs the Kafka KSQL Server
   ksql-server:
@@ -254,6 +195,9 @@ services:
   mongo:
       image: mongo
 
+  mongo:
+      image: mongo
+
   mongo-api:
       image: aleksxp/docker-eve-python
       ports:
@@ -263,3 +207,26 @@ services:
       depends_on:
           - mongo
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:latest
+    container_name: elasticsearch
+    #restart: always
+    depends_on:
+      - kafka-connect
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+  kibana:
+    image: docker.elastic.co/kibana/kibana:latest
+    container_name: kibana
+    restart: always
+    depends_on:
+      - elasticsearch
+    ports:
+      - "5601:5601"
+    environment:
+      xpack.security.enabled: "false"
+      discovery.type: "single-node"
