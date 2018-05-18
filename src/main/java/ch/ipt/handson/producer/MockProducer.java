@@ -24,13 +24,13 @@ public class MockProducer {
     public static final double VIEWS_PER_SECOND = 2.0;
     public static final double CART_ODDS = .5;
     public static final double ORDER_ODDS = .2;
-    public static final int MEAN_PAYMENT_TIME_SECONDS = 60;
+    public static final int MEAN_PAYMENT_TIME_SECONDS = 5;
     public static final int STDEV_PAYMENT_TIME_SECONDS = 30;
     public static final int MEAN_SHIPPING_TIME_SECONDS = 5;
     public static final int STDEV_SHIPPING_TIME_SECONDS = 2;
-    public static final int MEAN_UNDERWAY_TIME_SECONDS = 10;
+    public static final int MEAN_UNDERWAY_TIME_SECONDS = 5;
     public static final int STDEV_UNDERWAY_TIME_SECONDS = 2;
-    public static final int MEAN_DELIVERY_TIME_SECONDS = 30;
+    public static final int MEAN_DELIVERY_TIME_SECONDS = 5;
     public static final int STDEV_DELIVERY_TIME_SECONDS = 10;
     private static final double PACKET_LOST_ODDS = .2;
 
