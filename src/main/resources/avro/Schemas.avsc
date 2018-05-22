@@ -257,27 +257,37 @@
   },
 //todo cleanup
   {
-    "namespace": "ch.ipt.handson.event",
-    "name": "FullPurchase",
+    "namespace": "ch.ipt.handson.model",
+    "name": "ShoppingCart",
     "type": "record",
     "fields": [
       {
-        "name": "orderId",
+        "name": "books",
+        "type": {
+          "type": "array",
+          "items": "ch.ipt.handson.model.Book"
+        }
+      }
+    ]
+  },
+  {
+    "namespace": "ch.ipt.handson.model",
+    "name": "DenormalizedPurchase",
+    "type": "record",
+    "fields": [
+      {
+        "name": "purchaseId",
         "type": "string"
       },
       {
-        "name": "customer",
-        "type": "ch.ipt.handson.event.Customer"
-      },
-      {
-        "name": "books",
-        "type": "ch.ipt.handson.event.ShoppingCart"
+        "name": "shoppingCart",
+        "type": "ch.ipt.handson.model.ShoppingCart"
       },
       {
         "name": "shipment",
         "type": [
           "null",
-          "ch.ipt.handson.event.Shipping"
+          "ch.ipt.handson.model.Shipping"
         ]
       },
       {

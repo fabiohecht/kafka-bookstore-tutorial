@@ -13,7 +13,7 @@ import java.util.UUID;
 /**
  * I put some common boilerplate code here so we can focus on the Kafka Streams part on the other classes
  */
-public abstract class AbstractStream {
+public class KafkaStreamsApp {
     static Properties config;
 
     static void initializeConfig() {

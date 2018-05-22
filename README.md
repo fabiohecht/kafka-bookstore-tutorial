@@ -304,6 +304,7 @@ This is a stream-stream join, and not yet supported in KSQL
 
 ### Average ticket
     
+// TODO this is not average ticket
 
 Persist as a table:
 

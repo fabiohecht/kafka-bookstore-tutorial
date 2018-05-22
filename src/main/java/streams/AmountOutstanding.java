@@ -1,5 +1,6 @@
 package streams;
 
+import ch.ipt.handson.model.OutstandingAmount;
 import ch.ipt.handson.model.Payment;
 import ch.ipt.handson.model.Purchase;
 import ch.ipt.handson.model.PurchasePayment;
@@ -13,11 +14,13 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Amount outstanding (i.e. amount ordered but not yet paid)
  */
-public class AmountOutstanding extends AbstractStream {
+public class AmountOutstanding extends KafkaStreamsApp {
     static final Logger log = LoggerFactory.getLogger(AmountOutstanding.class);
 
     private static final String INPUT_TOPIC_PURCHASE = "purchase";
@@ -37,11 +40,12 @@ public class AmountOutstanding extends AbstractStream {
 
         final KStream<String, Purchase> purchase = builder.stream(INPUT_TOPIC_PURCHASE);
         final KStream<String, Payment> payment = builder.stream(INPUT_TOPIC_PAYMENT);
-        //final KTable<String, Book> employeeTable = builder.table(INPUT_TOPIC_EMPLOYEE, Materialized.with(stringSerde, stringSerde));
+
+        final Set<String> outstandingPurchases = new HashSet<>();
 
         //we'll outer join purchase and payment, filter for payment null (outstanding) and add up the amounts
         KStream<String, Payment> paymentRekeyed = payment.selectKey((key, value) -> value.getReferenceNumber());
-        KTable<String, AmountOutstanding> joined = purchase
+        KTable<String, OutstandingAmount> joined = purchase
                 .peek((k, v) -> log.info(" before join: {} {}", k, v.toString()))
                 .outerJoin(
                         //to prepare for the join, we need to change keys, as joins are always key based
@@ -50,21 +54,24 @@ public class AmountOutstanding extends AbstractStream {
                         JoinWindows.of(Duration.of(2, ChronoUnit.MINUTES).toMillis()))
                 //.selectKey((key, purchasePayment) -> purchasePayment.getPayment() == null ? "outstanding" : "paid")
                 //.filter((key, value) -> key.equals("outstanding"))
-                .mapValues((readOnlyKey, value) -> AmountOutstanding.newBuilder()
-                        .setPurchaseId(readOnlyKey)
+                .mapValues((readOnlyKey, value) -> OutstandingAmount.newBuilder()
+                        .setPurchaseId(readOnlyKey)  //todo needed?
                         .setAmountOutstanding(
                                 (value.getPayment() != null ? value.getPayment().getAmount() : 0) - value.getPurchase().getTotalAmount())
                         .build())
 
                 .peek((k, v) -> log.info(" outstanding: {} {}", k, v.toString()))
-
                 .groupByKey()
-
+                .aggregate(
+                        () -> new OutstandingAmount(),
+                        (key, value, aggregate) -> value
+                )
                 //add all outstanding
-                .reduce((value1, value2) -> {
-                    value1.setAmountOutstanding(value1.getAmountOutstanding() + value2.getAmountOutstanding());
-                    return value1;
-                });
+//                .reduce((value1, value2) -> {
+//                    value1.setAmountOutstanding(value1.getAmountOutstanding() + value2.getAmountOutstanding());
+//                    return value1;
+//                })
+                ;
 
 //fixme this only sums, we also need to subtract when a payment is made
 
