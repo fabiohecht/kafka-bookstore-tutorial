@@ -31,7 +31,7 @@ public class MockProducer {
     public static final int MEAN_UNDERWAY_TIME_SECONDS = 5;
     public static final int STDEV_UNDERWAY_TIME_SECONDS = 2;
     public static final int MEAN_DELIVERY_TIME_SECONDS = 5;
-    public static final int STDEV_DELIVERY_TIME_SECONDS = 10;
+    public static final int STDEV_DELIVERY_TIME_SECONDS = 3;
     private static final double PACKET_LOST_ODDS = .2;
 
     static private Producer producer;

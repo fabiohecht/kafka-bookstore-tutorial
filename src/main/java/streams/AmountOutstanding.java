@@ -48,7 +48,7 @@ public class AmountOutstanding extends KafkaStreamsApp {
         KStream<String, Payment> paymentRekeyed = payment
                 .selectKey((key, value) -> value.getReferenceNumber());
 
-        KTable<String, OutstandingAmount> joined = purchase
+        KTable<String, OutstandingAmount> paidPurchases = purchase
                 .peek((k, v) -> log.info(" before join: {} {}", k, v.toString()))
                 .outerJoin(
                         paymentRekeyed,
@@ -91,7 +91,7 @@ public class AmountOutstanding extends KafkaStreamsApp {
                         }
                 );
 
-        joined.toStream()
+        paidPurchases.toStream()
                 .peek((k, v) -> log.info(" write: {} {}", k, v.toString()))
                 .to(OUTPUT_TOPIC);
 

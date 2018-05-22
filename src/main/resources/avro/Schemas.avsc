@@ -251,7 +251,7 @@
       }
     ]
   },
-//todo cleanup
+  //todo cleanup
   {
     "namespace": "ch.ipt.handson.model",
     "name": "ShoppingCart",
@@ -290,6 +290,22 @@
         "name": "totalAmount",
         "doc": "Purchase total amount, in cents/Rappen.",
         "type": "int"
+      }
+    ]
+  },
+  {
+    "namespace": "ch.ipt.handson.model",
+    "name": "ShippingTime",
+    "type": "record",
+    "fields": [
+      {
+        "name": "timeToDeliver",
+        "type": "long"
+      },
+      {
+        "name": "count",
+        "type": "int",
+        "default": 1
       }
     ]
   }
