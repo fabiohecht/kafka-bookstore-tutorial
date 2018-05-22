@@ -54,6 +54,11 @@ public class PurchasesDenormalized extends KafkaStreamsApp {
         //we could produce one event with customer, purchase, books,
         KTable<String, DenormalizedPurchase> denormalizedPurchaseKStream = purchase
 
+                //todo debug
+                .filter((key, value) -> value.getPurchaseId().equals("823779c7-cba0-4c1b-8b50-ede1c9ed0163"))
+
+                .peek((k, v) -> log.info("input k={} v={}", k, v))
+
                 //we use flatMap to create one event per book purchased (needed because our join is one to many)
                 .flatMap((key, value) -> {
                     List<KeyValue<String, Purchase>> ret = new ArrayList<>(value.getBookIds().size());
@@ -62,6 +67,10 @@ public class PurchasesDenormalized extends KafkaStreamsApp {
                     }
                     return ret;
                 })
+
+                .peek((k, v) -> log.info("flat k={} v={}", k, v))
+
+
                 .join(bookTable,
                         (leftKey, purchase1) -> leftKey, /* derive a (potentially) new key by which to lookup against the table */
                         (purchase1, book) -> DenormalizedPurchase.newBuilder()
@@ -71,18 +80,24 @@ public class PurchasesDenormalized extends KafkaStreamsApp {
                                                 .build()
                                 )
                                 .setPurchaseId(purchase1.getPurchaseId())
-                                .setShipment(Shipping.newBuilder().build())
+                                .setShipment(null)
                                 .setTotalAmount(purchase1.getTotalAmount())
-                               // .build()
+                                .build()
                 )
+                .peek((k, v) -> log.info("join k={} v={}", k, v))
+
+                .selectKey((key, value) -> value.getPurchaseId())
+
                 .groupByKey()
                 .reduce((value1, value2) -> {
                     value1.getShoppingCart().getBooks().add(value2.getShoppingCart().getBooks().get(0));
                     return value1;
-                })
+                });
 
+        denormalizedPurchaseKStream.toStream()
+                .peek((k, v) -> log.info("output k={} v={}", k, v))
 
-                .mapValues((readOnlyKey, value) -> value.build());
+                .to(OUTPUT_TOPIC);
 
         // starts stream
         return new KafkaStreams(builder.build(), config);
