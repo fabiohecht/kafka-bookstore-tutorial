@@ -1,22 +1,51 @@
-# IPT-Confluent Workshop—Kafka Bookstore Tutorial
+# ipt-Confluent Workshop :: Kafka Bookstore Tutorial
+
+The Kafka Bookstore is an online shop specialized in books by or about Franz Kafka.
+
+It uses Apache Kafka as its messaging platform, due to its singular characteristics:
+
+ - Real time data streaming
+ - Decouples microservices with event driven architecture
+ - Integrated storage, which allows messages to be reprocessed in the future
+ - Wide range of connectors to import and export data into and out of it (Kafka Connect)
+ - Stream analysis with KSQL and Kafka Streams
+ - Elasticity, scalability, robustness, and high availability
+ - Open source with active community
+ - Excellent tools and support from Confluent ;)
+ - It’s awesome!
+
+Since a couple of weeks now, a minimum viable product (MVP) has been released and it’s attracting a lot of attention. The workflow is quite simple:
+
+ 1. Customer signs up/logs in
+ 1. Customer browses products
+ 1. Customer adds products to cart
+ 1. Customer places an order
+ 1. Customer pays (informed by third-party payment partner)
+ 1. Order is shipped (informed by shipping partner)
+ 1. Shipment is delivered or lost (informed by shipping partner)
+
+## Running Platform
+
+Your choice: Local docker images or use VirtualBox image.
+
+### Local
+
+* Docker and Docker Compose must be installed
+    * Mac OS: [https://docs.docker.com/docker-for-mac/install/]
+    * Linux: You don't need instructions.
+    * Other OSs: [https://docs.docker.com/engine/installation/]
+* Git: https://git-scm.com/downloads
+
+If you have an outdated laptop (i.e. with less than 16 GB RAM), please have a look [here](https://ipt.jiveon.com/docs/DOC-2169).
 
 ## Prerequisites
 
 - Docker
     - `macOS <https://docs.docker.com/docker-for-mac/install/>`__
     - `All platforms <https://docs.docker.com/engine/installation/>`__
-- `Git <https://git-scm.com/downloads>`__
+- `Git <>`__
 
-## Running Platform
-
-Your choice: Local docker images (hopefully download time is OK) or use shared infrastructure in AWS.
-
-### Local
-
-* Docker and Docker Compose must be installed and configured with at least 4 GB of memory.
-    * [Mac OS|https://docs.docker.com/docker-for-mac/install/]
-    * Other OSs [https://docs.docker.com/engine/installation/]
-* Git
+    
 
 In src/main/docker-compose:
 
@@ -31,6 +60,8 @@ TODO: Document how to get the java app running
 TODO: Put the customer and book data in mysql/postgres and set up debezium to CDC it across (can then demo realtime changes of data in DB reflecting in Kafka + KSQL processing)
 
 ## KSQL
+
+KSQL is a new product from Confluent released in March 2018... [TODO shortly describe KSQL]
 
 Launch the KSQL cli:
 
@@ -92,31 +123,6 @@ to see a live feed of messages being added to the topic (note the ommission of `
     2018-05-17 14:57:00 | Authors, Austrian | 4
     2018-05-17 14:57:00 | Grotesque in literature | 1
 
-### For each purchase, which books were bought?
-
-Purchase data:
-
-    5/17/18 8:09:42 PM UTC, 60a7ba13-af98-4e98-ba0f-d45e5e83923c, {"purchaseId": "60a7ba13-af98-4e98-ba0f-d45e5e83923c", "customerId": 52, "bookIds": ["2tTdnAEACAAJ", "zBskDwAAQBAJ", "FbPQPwAACAAJ", "kHnrswEACAAJ", "Fr7vCgAAQBAJ", "ym9rAgAAQBAJ", "0JYeJp1F99cC", "IkAzf9IRVpIC", "KdDqtq_CemwC", "beYRAAAAQBAJ", "d0RcAAAAMAAJ"], "packet": null, "totalAmount": 28901}
-
-Book data:
-
-    5/17/18 2:54:32 PM UTC, zOhEDgAAQBAJ, {"bookId": "zOhEDgAAQBAJ", "title": "Herz auf Eis", "authors": "Isabelle Autissier", "categories": "Fiction", "price": 2000}
-    5/17/18 2:54:32 PM UTC, 587mAgAAQBAJ, {"bookId": "587mAgAAQBAJ", "title": "Frühstück bei Tiffany", "authors": "Truman Capote", "categories": "Fiction", "price": 1450}
-    5/17/18 2:54:32 PM UTC, krU-DwAAQBAJ, {"bookId": "krU-DwAAQBAJ", "title": "Die Staatsräte", "authors": "Helmut Lethen", "categories": "History", "price": 2500}
-    5/17/18 2:54:32 PM UTC, 4mE6XwAACAAJ, {"bookId": "4mE6XwAACAAJ", "title": "Auf der Suche nach der verlorenen Zeit", "authors": "Marcel Proust", "categories": null, "price": 3250}
-    5/17/18 2:54:32 PM UTC, mqvzSAAACAAJ, {"bookId": "mqvzSAAACAAJ", "title": "Reise zum Mittelpunkt der Erde", "authors": "Jules Verne", "categories": null, "price": 4100}
-    5/17/18 2:54:32 PM UTC, eanFlQEACAAJ, {"bookId": "eanFlQEACAAJ", "title": "In Swanns Welt", "authors": "Marcel Proust", "categories": null, "price": 3650}
-    5/17/18 2:54:32 PM UTC, DHaQtAEACAAJ, {"bookId": "DHaQtAEACAAJ", "title": "Der mann ohne eigenschaften", "authors": "Robert Musil", "categories": null, "price": 3400}
-    5/17/18 2:54:32 PM UTC, 6yxDtQEACAAJ, {"bookId": "6yxDtQEACAAJ", "title": "Das Judentum in der Musik : Was ist Deutsch ; Modern", "authors": "Richard Wagner", "categories": "Antisemitism", "price": 3400}
-    5/17/18 2:54:32 PM UTC, XVn1jwEACAAJ, {"bookId": "XVn1jwEACAAJ", "title": "Der Prozess - Grossdruck", "authors": "Franz Kafka", "categories": null, "price": 3400}
-    5/17/18 2:54:32 PM UTC, h_xsAgAAQBAJ, {"bookId": "h_xsAgAAQBAJ", "title": "Reise ans Ende der Nacht", "authors": "Louis-Ferdinand Céline", "categories": "Fiction", "price": 1300}
-
-Can't be done in KSQL: would need to explode the nested bookIds object in order to do the join.
-
-    ksql> select p.purchaseid, b.title from purchase_stream p left join book b on p.bookid=b.bookid;
-     Line: 1, Col: 81 : Invalid join criteria (P.BOOKID = B.BOOKID). Key for P is not set correctly.
-
---> Do an example of Kafka Streams code here ?
 
 ### For each purchase, add customer details
 
@@ -174,6 +180,60 @@ Query it:
     CREATE STREAM BIG_PURCHASE AS SELECT * FROM PURCHASE_STREAM WHERE totalAmount>30000;
 
 The resulting Kafka topic could be used to drive fraud checks, automatically hold orders, etc.
+
+### Analytics: views per book
+
+    ksql> select b.title, count(*) as view_count from interaction i left join book b on i.Id = b.bookId where i.event='view' group by b.title;
+    Fremdheit in Kafkas Werken und Kafkas Wirkung auf die persische moderne Literatur | 34
+    'Vor dem Gesetz' - Jacques Derridas Kafka-Lektüre | 23
+    In der Strafkolonie | 59
+    Kafka und Prag | 72
+
+
+
+
+## Kafka Streams
+
+Kafka Streams is much more mature and powerful than KSQL. A Kafka Streams application is a normal Java app, which makes
+it profit from Java's power and tool support. Most Kafka Streams applications read and write data to 
+Kafka topics, though external systems can also be involved (after all, you are in the Java world).
+[TODO more explanation]
+
+Some current limitations of KSQL:
+
+ - only join stream and table
+ - cannot join by array item
+ - cannot use external (e.g. Java) data structures and logic
+ - cannot use avro keys
+ - cannot use avro values that reference existing data types, or records of records, or arrays of records
+ - and more
+ 
+
+### For each purchase, which books were bought?
+
+Purchase data:
+
+    5/17/18 8:09:42 PM UTC, 60a7ba13-af98-4e98-ba0f-d45e5e83923c, {"purchaseId": "60a7ba13-af98-4e98-ba0f-d45e5e83923c", "customerId": 52, "bookIds": ["2tTdnAEACAAJ", "zBskDwAAQBAJ", "FbPQPwAACAAJ", "kHnrswEACAAJ", "Fr7vCgAAQBAJ", "ym9rAgAAQBAJ", "0JYeJp1F99cC", "IkAzf9IRVpIC", "KdDqtq_CemwC", "beYRAAAAQBAJ", "d0RcAAAAMAAJ"], "packet": null, "totalAmount": 28901}
+
+Book data:
+
+    5/17/18 2:54:32 PM UTC, zOhEDgAAQBAJ, {"bookId": "zOhEDgAAQBAJ", "title": "Herz auf Eis", "authors": "Isabelle Autissier", "categories": "Fiction", "price": 2000}
+    5/17/18 2:54:32 PM UTC, 587mAgAAQBAJ, {"bookId": "587mAgAAQBAJ", "title": "Frühstück bei Tiffany", "authors": "Truman Capote", "categories": "Fiction", "price": 1450}
+    5/17/18 2:54:32 PM UTC, krU-DwAAQBAJ, {"bookId": "krU-DwAAQBAJ", "title": "Die Staatsräte", "authors": "Helmut Lethen", "categories": "History", "price": 2500}
+    5/17/18 2:54:32 PM UTC, 4mE6XwAACAAJ, {"bookId": "4mE6XwAACAAJ", "title": "Auf der Suche nach der verlorenen Zeit", "authors": "Marcel Proust", "categories": null, "price": 3250}
+    5/17/18 2:54:32 PM UTC, mqvzSAAACAAJ, {"bookId": "mqvzSAAACAAJ", "title": "Reise zum Mittelpunkt der Erde", "authors": "Jules Verne", "categories": null, "price": 4100}
+    5/17/18 2:54:32 PM UTC, eanFlQEACAAJ, {"bookId": "eanFlQEACAAJ", "title": "In Swanns Welt", "authors": "Marcel Proust", "categories": null, "price": 3650}
+    5/17/18 2:54:32 PM UTC, DHaQtAEACAAJ, {"bookId": "DHaQtAEACAAJ", "title": "Der mann ohne eigenschaften", "authors": "Robert Musil", "categories": null, "price": 3400}
+    5/17/18 2:54:32 PM UTC, 6yxDtQEACAAJ, {"bookId": "6yxDtQEACAAJ", "title": "Das Judentum in der Musik : Was ist Deutsch ; Modern", "authors": "Richard Wagner", "categories": "Antisemitism", "price": 3400}
+    5/17/18 2:54:32 PM UTC, XVn1jwEACAAJ, {"bookId": "XVn1jwEACAAJ", "title": "Der Prozess - Grossdruck", "authors": "Franz Kafka", "categories": null, "price": 3400}
+    5/17/18 2:54:32 PM UTC, h_xsAgAAQBAJ, {"bookId": "h_xsAgAAQBAJ", "title": "Reise ans Ende der Nacht", "authors": "Louis-Ferdinand Céline", "categories": "Fiction", "price": 1300}
+
+Can't be done in KSQL: would need to explode the nested bookIds object in order to do the join.
+
+    ksql> select p.purchaseid, b.title from purchase_stream p left join book b on p.bookid=b.bookid;
+     Line: 1, Col: 81 : Invalid join criteria (P.BOOKID = B.BOOKID). Key for P is not set correctly.
+
+--> Do an example of Kafka Streams code here ?
 
 ### Denormalise orders with customer, books, shipping, and payments
 
@@ -241,13 +301,6 @@ This is a stream-stream join, and not yet supported in KSQL
 
 ### average time from ordered to paid, shipped, and received: where can we optimize?**
 
-### Analytics: views per book
-
-    ksql> select b.title, count(*) as view_count from interaction i left join book b on i.Id = b.bookId where i.event='view' group by b.title;
-    Fremdheit in Kafkas Werken und Kafkas Wirkung auf die persische moderne Literatur | 34
-    'Vor dem Gesetz' - Jacques Derridas Kafka-Lektüre | 23
-    In der Strafkolonie | 59
-    Kafka und Prag | 72
 
 ### Average ticket
     

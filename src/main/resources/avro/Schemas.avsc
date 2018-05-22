@@ -221,5 +221,70 @@
         ]
       }
     ]
+  },
+  {
+    "namespace": "ch.ipt.handson.model",
+    "name": "PurchasePayment",
+    "type": "record",
+    "fields": [
+      {
+        "name": "purchase",
+        "type": "ch.ipt.handson.model.Purchase"
+      },
+      {
+        "name": "payment",
+        "type": [
+          "null",
+          "ch.ipt.handson.model.Payment"
+        ]
+      }
+    ]
+  },
+  {
+    "namespace": "ch.ipt.handson.model",
+    "name": "OutstandingAmount",
+    "type": "record",
+    "fields": [
+      {
+        "name": "purchaseId",
+        "type": "string"
+      },
+      {
+        "name": "amountOutstanding",
+        "type": "int"
+      }
+    ]
+  },
+//todo cleanup
+  {
+    "namespace": "ch.ipt.handson.event",
+    "name": "FullPurchase",
+    "type": "record",
+    "fields": [
+      {
+        "name": "orderId",
+        "type": "string"
+      },
+      {
+        "name": "customer",
+        "type": "ch.ipt.handson.event.Customer"
+      },
+      {
+        "name": "books",
+        "type": "ch.ipt.handson.event.ShoppingCart"
+      },
+      {
+        "name": "shipment",
+        "type": [
+          "null",
+          "ch.ipt.handson.event.Shipping"
+        ]
+      },
+      {
+        "name": "totalAmount",
+        "doc": "Purchase total amount, in cents/Rappen.",
+        "type": "int"
+      }
+    ]
   }
 ]

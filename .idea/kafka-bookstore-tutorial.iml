@@ -34,6 +34,11 @@
     <orderEntry type="library" name="Maven: jline:jline:0.9.94" level="project" />
     <orderEntry type="library" name="Maven: io.netty:netty:3.10.5.Final" level="project" />
     <orderEntry type="library" name="Maven: com.101tec:zkclient:0.10" level="project" />
+    <orderEntry type="library" name="Maven: io.confluent:kafka-streams-avro-serde:4.1.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.kafka:kafka-streams:1.1.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.kafka:connect-json:1.1.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.kafka:connect-api:1.1.0" level="project" />
+    <orderEntry type="library" name="Maven: org.rocksdb:rocksdbjni:5.7.3" level="project" />
     <orderEntry type="library" name="Maven: com.github.javafaker:javafaker:0.15" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-lang3:3.5" level="project" />
     <orderEntry type="library" name="Maven: org.yaml:snakeyaml:android:1.20" level="project" />
