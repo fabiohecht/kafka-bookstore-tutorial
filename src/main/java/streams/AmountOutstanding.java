@@ -44,36 +44,52 @@ public class AmountOutstanding extends KafkaStreamsApp {
         final Set<String> outstandingPurchases = new HashSet<>();
 
         //we'll outer join purchase and payment, filter for payment null (outstanding) and add up the amounts
-        KStream<String, Payment> paymentRekeyed = payment.selectKey((key, value) -> value.getReferenceNumber());
+        //to prepare for the join, we need to change keys, as joins are always key based
+        KStream<String, Payment> paymentRekeyed = payment
+                .selectKey((key, value) -> value.getReferenceNumber());
+
         KTable<String, OutstandingAmount> joined = purchase
                 .peek((k, v) -> log.info(" before join: {} {}", k, v.toString()))
                 .outerJoin(
-                        //to prepare for the join, we need to change keys, as joins are always key based
                         paymentRekeyed,
                         (purchase1, payment1) -> new PurchasePayment(purchase1, payment1),
-                        JoinWindows.of(Duration.of(2, ChronoUnit.MINUTES).toMillis()))
-                //.selectKey((key, purchasePayment) -> purchasePayment.getPayment() == null ? "outstanding" : "paid")
-                //.filter((key, value) -> key.equals("outstanding"))
-                .mapValues((readOnlyKey, value) -> OutstandingAmount.newBuilder()
-                        .setPurchaseId(readOnlyKey)  //todo needed?
-                        .setAmountOutstanding(
-                                (value.getPayment() != null ? value.getPayment().getAmount() : 0) - value.getPurchase().getTotalAmount())
-                        .build())
+                        JoinWindows.of(Duration.of(5, ChronoUnit.MINUTES).toMillis()))
+                .peek((k, v) -> log.info(" after join: {} {}", k, v.toString()))
+                .mapValues((readOnlyKey, value) -> {
+                    int amountOutstanding = 0;
+                    if (value.getPayment() == null) {
+                        //null payment = outstanding
+                        if (!outstandingPurchases.contains(readOnlyKey)) {
+                            amountOutstanding = value.getPurchase().getTotalAmount();
+                            outstandingPurchases.add(readOnlyKey);
+                        } else {
+                            log.warn("was about to count twice {}", readOnlyKey);
+                        }
+                    } else {
+                        //non-null payment = we subtract the paid amount from outstanding
+                        //but only if we added it before
+                        if (outstandingPurchases.contains(readOnlyKey)) {
+                            amountOutstanding = -value.getPayment().getAmount();
+                            outstandingPurchases.remove(readOnlyKey);
+                        } else {
+                            log.warn("payment received for non-outstanding purchase {}", readOnlyKey);
+                        }
+                    }
+                    return OutstandingAmount.newBuilder()
+                            .setAmountOutstanding(amountOutstanding)
+                            .build();
+                })
 
                 .peek((k, v) -> log.info(" outstanding: {} {}", k, v.toString()))
-                .groupByKey()
-                .aggregate(
-                        () -> new OutstandingAmount(),
-                        (key, value, aggregate) -> value
-                )
-                //add all outstanding
-//                .reduce((value1, value2) -> {
-//                    value1.setAmountOutstanding(value1.getAmountOutstanding() + value2.getAmountOutstanding());
-//                    return value1;
-//                })
-                ;
 
-//fixme this only sums, we also need to subtract when a payment is made
+                //add all outstanding$
+                //.selectKey((key, value) -> "fixed")
+                .groupByKey()
+                .reduce((value1, value2) -> {
+                            value1.setAmountOutstanding(value1.getAmountOutstanding() + value2.getAmountOutstanding());
+                            return value1;
+                        }
+                );
 
         joined.toStream()
                 .peek((k, v) -> log.info(" write: {} {}", k, v.toString()))

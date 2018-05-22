@@ -362,6 +362,12 @@ Create a connector that streams the book view count to Elasticsearch
     }'
 
 
+## One more idea: viewed books by language
+
+
+ - add to schema (with default to be backwards compatible)
+ - 
+
 ## KSQL reference
 
 * https://www.confluent.io/product/ksql/

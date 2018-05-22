@@ -246,10 +246,6 @@
     "type": "record",
     "fields": [
       {
-        "name": "purchaseId",
-        "type": "string"
-      },
-      {
         "name": "amountOutstanding",
         "type": "int"
       }

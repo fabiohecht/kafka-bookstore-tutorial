@@ -33,6 +33,7 @@ public class PurchasesDenormalized extends KafkaStreamsApp {
     private static final String INPUT_TOPIC_BOOK = "book";
     private static final String INPUT_TOPIC_CUSTOMER = "customer";
     private static final String INPUT_TOPIC_PAYMENT = "payment";
+    private static final String INPUT_TOPIC_SHIPPING = "shipping";
     private static final String OUTPUT_TOPIC = "purchases-full";
 
 
@@ -49,7 +50,8 @@ public class PurchasesDenormalized extends KafkaStreamsApp {
         final KStream<String, Purchase> purchase = builder.stream(INPUT_TOPIC_PURCHASE);
         final GlobalKTable<String, Book> bookTable = builder.globalTable(INPUT_TOPIC_BOOK);
         final GlobalKTable<String, Book> customerTable = builder.globalTable(INPUT_TOPIC_CUSTOMER);
-        //  final KStream<String, Payment> payment = builder.stream(INPUT_TOPIC_PAYMENT);
+        // final KStream<String, Payment> payment = builder.stream(INPUT_TOPIC_PAYMENT);
+        // final KTable<String, Shipping> shippingTable = builder.table(INPUT_TOPIC_SHIPPING);
 
         //we could produce one event with customer, purchase, books,
         KTable<String, DenormalizedPurchase> denormalizedPurchaseKStream = purchase
@@ -57,7 +59,7 @@ public class PurchasesDenormalized extends KafkaStreamsApp {
                 //todo debug
                 .filter((key, value) -> value.getPurchaseId().equals("823779c7-cba0-4c1b-8b50-ede1c9ed0163"))
 
-                .peek((k, v) -> log.info("input k={} v={}", k, v))
+//                .peek((k, v) -> log.info("input k={} v={}", k, v))
 
                 //we use flatMap to create one event per book purchased (needed because our join is one to many)
                 .flatMap((key, value) -> {
@@ -69,7 +71,6 @@ public class PurchasesDenormalized extends KafkaStreamsApp {
                 })
 
                 .peek((k, v) -> log.info("flat k={} v={}", k, v))
-
 
                 .join(bookTable,
                         (leftKey, purchase1) -> leftKey, /* derive a (potentially) new key by which to lookup against the table */
@@ -84,13 +85,17 @@ public class PurchasesDenormalized extends KafkaStreamsApp {
                                 .setTotalAmount(purchase1.getTotalAmount())
                                 .build()
                 )
-                .peek((k, v) -> log.info("join k={} v={}", k, v))
+                .peek((k, v) -> log.info("join1 k={} v={}", k, v))
 
                 .selectKey((key, value) -> value.getPurchaseId())
 
                 .groupByKey()
                 .reduce((value1, value2) -> {
-                    value1.getShoppingCart().getBooks().add(value2.getShoppingCart().getBooks().get(0));
+                    Book bookToAdd = value2.getShoppingCart().getBooks().get(0);
+                    List<Book> cart1 = value1.getShoppingCart().getBooks();
+                    if (!cart1.stream().anyMatch(book -> book.getBookId().equals(bookToAdd.getBookId()))) {
+                        cart1.add(bookToAdd);
+                    }
                     return value1;
                 });
 
