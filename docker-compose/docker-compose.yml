@@ -120,7 +120,7 @@ services:
 
 #Landoop UIs
   schema-registry-ui:
-    image: landoop/schema-registry-ui:latest
+    image: landoop/schema-registry-ui:0.9.4
     hostname: schema-registry-ui
     ports:
       - "8001:8000"
@@ -151,7 +151,7 @@ services:
       - "moby:127.0.0.1"
 
   kafka-topics-ui:
-    image: landoop/kafka-topics-ui:latest
+    image: landoop/kafka-topics-ui:0.9.3
     hostname: kafka-topics-ui
     ports:
       - "8000:8000"
@@ -199,7 +199,7 @@ services:
       - "moby:127.0.0.1"
 
   kafka-connect-ui:
-    image: landoop/kafka-connect-ui:latest
+    image: landoop/kafka-connect-ui:0.9.4
     hostname: kafka-connect-ui
     ports:
       - "8003:8000"
