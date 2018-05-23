@@ -246,3 +246,16 @@ services:
     environment:
       xpack.security.enabled: "false"
       discovery.type: "single-node"
+
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    ports:
+      - 3306:3306
+    volumes:
+      - ./dump.sql:/docker-entrypoint-initdb.d/dump.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: name_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
