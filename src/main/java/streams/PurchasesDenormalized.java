@@ -27,7 +27,7 @@ import java.util.List;
  */
 public class PurchasesDenormalized extends KafkaStreamsApp {
 
-    static final Logger log = LoggerFactory.getLogger(AmountOutstanding.class);
+    static final Logger log = LoggerFactory.getLogger(PaymentsOutstanding.class);
 
     private static final String INPUT_TOPIC_PURCHASE = "purchase";
     private static final String INPUT_TOPIC_BOOK = "book";

@@ -14,7 +14,7 @@ import java.time.temporal.ChronoUnit;
 
 public class ShipmentTime extends KafkaStreamsApp {
 
-    static final Logger log = LoggerFactory.getLogger(AmountOutstanding.class);
+    static final Logger log = LoggerFactory.getLogger(PaymentsOutstanding.class);
 
     private static final String INPUT_TOPIC_SHIPPING = "shipping";
     private static final String OUTPUT_TOPIC = "shipping-times";

@@ -247,7 +247,8 @@
     "fields": [
       {
         "name": "amountOutstanding",
-        "type": "int"
+        "type": "int",
+        "default": 0
       }
     ]
   },

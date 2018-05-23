@@ -8,7 +8,6 @@ import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.JoinWindows;
 import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.kstream.KTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,8 +19,8 @@ import java.util.Set;
 /**
  * Amount outstanding (i.e. amount ordered but not yet paid)
  */
-public class AmountOutstanding extends KafkaStreamsApp {
-    static final Logger log = LoggerFactory.getLogger(AmountOutstanding.class);
+public class PaymentsOutstanding extends KafkaStreamsApp {
+    static final Logger log = LoggerFactory.getLogger(PaymentsOutstanding.class);
 
     private static final String INPUT_TOPIC_PURCHASE = "purchase";
     private static final String INPUT_TOPIC_PAYMENT = "payment";
@@ -48,9 +47,10 @@ public class AmountOutstanding extends KafkaStreamsApp {
         KStream<String, Payment> paymentRekeyed = payment
                 .selectKey((key, value) -> value.getReferenceNumber());
 
-        KTable<String, OutstandingAmount> paidPurchases = purchase
+        KStream<String, OutstandingAmount> paidPurchases = purchase
+                .filter((key, value) -> value.getPacket() == null)
                 .peek((k, v) -> log.info(" before join: {} {}", k, v.toString()))
-                .outerJoin(
+                .leftJoin(
                         paymentRekeyed,
                         (purchase1, payment1) -> new PurchasePayment(purchase1, payment1),
                         JoinWindows.of(Duration.of(5, ChronoUnit.MINUTES).toMillis()))
@@ -59,21 +59,21 @@ public class AmountOutstanding extends KafkaStreamsApp {
                     int amountOutstanding = 0;
                     if (value.getPayment() == null) {
                         //null payment = outstanding
-                        if (!outstandingPurchases.contains(readOnlyKey)) {
-                            amountOutstanding = value.getPurchase().getTotalAmount();
-                            outstandingPurchases.add(readOnlyKey);
-                        } else {
-                            log.warn("was about to count twice {}", readOnlyKey);
-                        }
+                        //if (!outstandingPurchases.contains(readOnlyKey)) {
+                        amountOutstanding = value.getPurchase().getTotalAmount();
+                        //    outstandingPurchases.add(readOnlyKey);
+                        //} else {
+                        //    log.warn("was about to count twice {}", readOnlyKey);
+                        //}
                     } else {
                         //non-null payment = we subtract the paid amount from outstanding
                         //but only if we added it before
-                        if (outstandingPurchases.contains(readOnlyKey)) {
-                            amountOutstanding = -value.getPayment().getAmount();
-                            outstandingPurchases.remove(readOnlyKey);
-                        } else {
-                            log.warn("payment received for non-outstanding purchase {}", readOnlyKey);
-                        }
+                        // if (outstandingPurchases.contains(readOnlyKey)) {
+                        amountOutstanding = -value.getPayment().getAmount();
+                        //        outstandingPurchases.remove(readOnlyKey);
+                        //     } else {
+                        //         log.warn("payment received for non-outstanding purchase {}", readOnlyKey);
+                        //      }
                     }
                     return OutstandingAmount.newBuilder()
                             .setAmountOutstanding(amountOutstanding)
@@ -82,16 +82,24 @@ public class AmountOutstanding extends KafkaStreamsApp {
 
                 .peek((k, v) -> log.info(" outstanding: {} {}", k, v.toString()))
 
-                //add all outstanding$
-                //.selectKey((key, value) -> "fixed")
-                .groupByKey()
+                //add all values
+//                .groupByKey()
+//                .reduce((value1, value2) -> {
+//                            value1.setAmountOutstanding(value1.getAmountOutstanding() + value2.getAmountOutstanding());
+//                            return value1;
+//                        }
+//                )
+                ;
+
+        paidPurchases//.toStream()
+                .peek((k, v) -> log.info(" before last selectKey: {} {}", k, v.toString()))
+                .groupBy((key, value) -> "fixed")
                 .reduce((value1, value2) -> {
                             value1.setAmountOutstanding(value1.getAmountOutstanding() + value2.getAmountOutstanding());
                             return value1;
                         }
-                );
-
-        paidPurchases.toStream()
+                )
+                .toStream()
                 .peek((k, v) -> log.info(" write: {} {}", k, v.toString()))
                 .to(OUTPUT_TOPIC);
 
