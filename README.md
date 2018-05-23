@@ -342,7 +342,7 @@ Create a connector that streams the book view count to Elasticsearch
 
 
 **some reference**
-    curl -X "POST" "http://kafkaconnect:8083/connectors/" \
+    curl -X "POST" "http://localhost:8083/connectors/" \
          -H "Content-Type: application/json" \
          -d '{
       "name": "es_sink_VIEWS_PER_BOOK",

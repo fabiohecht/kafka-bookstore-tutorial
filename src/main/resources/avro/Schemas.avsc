@@ -242,13 +242,20 @@
   },
   {
     "namespace": "ch.ipt.handson.model",
-    "name": "OutstandingAmount",
+    "name": "OutstandingPayments",
     "type": "record",
     "fields": [
       {
         "name": "amountOutstanding",
         "type": "int",
         "default": 0
+      },
+      {
+        "name": "outstandingPaymentPurchases",
+        "type": {
+          "type": "array",
+          "items": "ch.ipt.handson.model.Purchase"
+        }
       }
     ]
   },

@@ -22,9 +22,10 @@ public class KafkaStreamsApp {
         config.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, "http://localhost:8081");
         config.put(StreamsConfig.STATE_DIR_CONFIG, "/tmp/kafka-streams");
 
+        //Kafka always remembers what events the application already processed, which is great for failure recovery
+        //but for trying things out we want to start processing all events from start (i.e. offset 0) every time we rerun the app
         //adding a random UUID to the application ID is rather unusual in real life
-        //I did it for development reasons, so every time we run the application, we start consuming all topics from offset 0
-        //since Kafka always remembers what events the application already processed(great for failure recovery)
+        //I did it for development reasons, so every time we run the application, we start consuming all topics from the start (offset 0)
 
         config.put(StreamsConfig.APPLICATION_ID_CONFIG, "FHE-streams-" + UUID.randomUUID());
         config.put(StreamsConfig.CLIENT_ID_CONFIG, "Streams-" + UUID.randomUUID());

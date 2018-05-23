@@ -20,14 +20,15 @@ import java.util.List;
   - books bought
   - payment status
   - shipping status
- Thus, we willt ransform the events to denormalized data so it can be quickly looked up without joins.
+
+ Thus, we will transform the events to denormalized data so it can be quickly looked up without joins.
 
  So we use Kafka Streams to transform and write the events to a document store (Mongo)
  TODO or Elastic?
  */
-public class PurchasesDenormalized extends KafkaStreamsApp {
+public class PurchasesDenormalizedStreamsApp extends KafkaStreamsApp {
 
-    static final Logger log = LoggerFactory.getLogger(PaymentsOutstanding.class);
+    static final Logger log = LoggerFactory.getLogger(PaymentsOutstandingStreamsApp.class);
 
     private static final String INPUT_TOPIC_PURCHASE = "purchase";
     private static final String INPUT_TOPIC_BOOK = "book";

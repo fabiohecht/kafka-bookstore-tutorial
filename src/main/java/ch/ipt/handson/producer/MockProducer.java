@@ -41,16 +41,18 @@ public class MockProducer {
     static final RateLimiter rateLimiter = RateLimiter.create(VIEWS_PER_SECOND);
 
     static final ScheduledExecutorService executor = Executors.newScheduledThreadPool(10);
+    static volatile boolean running = true;
 
 
     public static void main(String[] args) {
         setUpProducer();
+        addShutdownHook();
         produce();
     }
 
     private static void produce() {
         int limit = Integer.MAX_VALUE;
-        while (limit-- > 0) {
+        while (running && limit-- > 0) {
 
             Book book = getRandomBook();
             Customer customer = getRandomCustomer();
@@ -85,6 +87,21 @@ public class MockProducer {
             rateLimiter.acquire();
         }
 
+    }
+
+    private static void addShutdownHook() {
+        final Thread mainThread = Thread.currentThread();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            running = false;
+
+            try {
+                executor.awaitTermination(30, TimeUnit.SECONDS);
+                mainThread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        }));
     }
 
     private static void producePurchaseShipping(Purchase order) {
@@ -205,4 +222,5 @@ public class MockProducer {
     private static void setUpProducer() {
         producer = new KafkaProducer(GlobalConfiguration.getProducerCOnfig());
     }
+
 }

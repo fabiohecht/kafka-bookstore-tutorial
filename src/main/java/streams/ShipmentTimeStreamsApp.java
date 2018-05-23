@@ -12,9 +12,9 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
-public class ShipmentTime extends KafkaStreamsApp {
+public class ShipmentTimeStreamsApp extends KafkaStreamsApp {
 
-    static final Logger log = LoggerFactory.getLogger(PaymentsOutstanding.class);
+    static final Logger log = LoggerFactory.getLogger(PaymentsOutstandingStreamsApp.class);
 
     private static final String INPUT_TOPIC_SHIPPING = "shipping";
     private static final String OUTPUT_TOPIC = "shipping-times";
@@ -31,7 +31,6 @@ public class ShipmentTime extends KafkaStreamsApp {
         final StreamsBuilder builder = new StreamsBuilder();
 
         final KStream<String, Shipping> shipping = builder.stream(INPUT_TOPIC_SHIPPING);
-
 
         KStream<String, Shipping> underwayShipments = shipping
                 .filter((key, value) -> value.getStatus().equals("underway"))
@@ -51,7 +50,6 @@ public class ShipmentTime extends KafkaStreamsApp {
                                 .setTimeToDeliver(delivered.getTimestamp() - underway.getTimestamp())
                                 .build(),
                         JoinWindows.of(Duration.of(5, ChronoUnit.MINUTES).toMillis()));
-
 
         timeToDeliver
                 .peek((k, v) -> log.info(" joined: {} {}", k, v.toString()))
