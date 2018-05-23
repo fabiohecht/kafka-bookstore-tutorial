@@ -8,7 +8,6 @@ import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.JoinWindows;
 import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.kstream.KTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,11 +71,11 @@ public class PaymentsOutstandingStreamsApp extends KafkaStreamsApp {
                 .aggregate(() -> OutstandingPayments.newBuilder().setOutstandingPaymentPurchases(new ArrayList<>()).build(),
                         (key, purchasePayment, aggregate) -> {
                             if (purchasePayment.getPayment() == null) {
-                                //new purchase, payment still outstanding
+                                //new purchase, payment still outstanding, we add
                                 aggregate.getOutstandingPaymentPurchases().add(purchasePayment.getPurchase());
                                 aggregate.setAmountOutstanding(aggregate.getAmountOutstanding() + purchasePayment.getPurchase().getTotalAmount());
                             } else {
-                                //purchase has been paid up, hurray!
+                                //purchase has been paid up, hurray! we remove
 
                                 //workaround .remove() not implemented by avro (i.e. getOutstandingPaymentPurchases().remove() throws exception)
                                 List<Purchase> opp = new ArrayList<>(aggregate.getOutstandingPaymentPurchases());
@@ -87,15 +86,11 @@ public class PaymentsOutstandingStreamsApp extends KafkaStreamsApp {
                             }
 
                             return aggregate;
-                        });
-
-
-        owedOrdersStream
+                        })
                 .toStream()
                 .peek((k, v) -> log.info(" write: {} {}", k, v.toString()))
                 .to(OUTPUT_TOPIC);
 
-        // starts stream
         return new KafkaStreams(builder.build(), config);
     }
 
