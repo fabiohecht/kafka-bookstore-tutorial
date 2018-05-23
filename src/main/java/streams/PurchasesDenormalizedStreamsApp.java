@@ -105,7 +105,6 @@ public class PurchasesDenormalizedStreamsApp extends KafkaStreamsApp {
 
                 .to(OUTPUT_TOPIC);
 
-        // starts stream
         return new KafkaStreams(builder.build(), config);
     }
 
