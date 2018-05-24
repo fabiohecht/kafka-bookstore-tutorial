@@ -45,9 +45,9 @@ The workflow is quite simple:
 #### Source systems
 
 For more information about the data schemas used, have a look at src/main/resources/avro/Schemas.avsc. These are defined
-in Avro format, which is fairly human-readable. The spec can be found at http://avro.apache.org/docs/1.8.2/spec.html.
+in Avro format, which is fairly human-readable (Json). The spec can be found at http://avro.apache.org/docs/1.8.2/spec.html.
 When the project is compiled with maven, the Java classes for the data model are generated, as specified in the pom.xml
-file under <buld><plugins>. You can test it with “mvn clean compile” from the command line (current directory is project
+file under &lt;buld>&lt;plugins>. You can test it with “mvn clean compile” from the command line (current directory is project
 root) or using IntelliJ’s “Maven Project” tool button (seen on the right-hand side), under kafka-bookstore-tutorial, 
 Lifecycle, double click “clean”, double click “compile”.
 
@@ -168,18 +168,21 @@ When you are done, exit with crtl+D.
 
 
 Check that imported data looks ok. You can use the Landoop Topics UI and look at the data in the "book" and "customer"
-topics. Or go old-school with the command line:
+topics. Or go old-school with the command line (we use the kafka-connect container just because it has the command
+line tools installed):
 
     docker-compose exec kafka-connect kafka-avro-console-consumer --bootstrap-server kafka:29092 --topic book --from-beginning --property schema.registry.url=http://schema-registry:8081
 
 
-Using console-consumer inside a container with kafka:
-Kafka-avro-console-consumer [todo] or Landoop Kafka topics UI.
+Press CTRL-C to exit.
+
+
+[**TODO**] Change data in MySQL and see that Kafka gets updated.
 
 ### Start Java Mock Producer
 
-Let's start the Java Mock event producer. All of this can be done from IntelliJ's, which is contained in the VM.
 
+Let's start the Java Mock event producer. All of this can be done from IntelliJ's, which is contained in the VM.
 Let's first compile the project with Maven. On the right-hand side of IntelliJ's window, under "Maven Projects", 
 "Lifecycle", double click "clean", then double click "package".
 
