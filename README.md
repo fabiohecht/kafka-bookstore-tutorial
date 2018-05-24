@@ -159,7 +159,7 @@ A MySQL Server was started by Docker Compose and preloaded with mock data. You c
 
 [**TODO** copy paste]
 
-When you are done, exit with crtl+D as usual.
+When you are done, exit with crtl+D.
 
 
 **TODO** set up debezium to CDC it across (can then demo realtime changes of data in DB reflecting in Kafka + KSQL processing)
@@ -170,7 +170,8 @@ When you are done, exit with crtl+D as usual.
 Check that imported data looks ok. You can use the Landoop Topics UI and look at the data in the "book" and "customer"
 topics. Or go old-school with the command line:
 
-    
+    docker-compose exec kafka-connect kafka-avro-console-consumer --bootstrap-server kafka:29092 --topic book --from-beginning --property schema.registry.url=http://schema-registry:8081
+
 
 Using console-consumer inside a container with kafka:
 Kafka-avro-console-consumer [todo] or Landoop Kafka topics UI.
