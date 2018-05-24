@@ -12,7 +12,6 @@ public class BookProducer {
     public static final String TOPIC_BOOK = "book";
 
     static private Producer producer;
-    static private BooksCollection booksCollection;
 
     public static void main(String[] args) throws IOException {
         setUpProducer();
