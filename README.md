@@ -10,14 +10,14 @@ This tutorial is organized in the following sections.
  1. Running Platform
  1. Stream Data into Kafka
  1. Stream Data Transformation with KSQL
- 1. Stream data Transformation with Kafka Streams
- 1. Stream data out of Kafka
+ 1. Stream Data Transformation with Kafka Streams
+ 1. Stream Data out of Kafka
 
 ## Use Case
 
 The Kafka Bookstore is an online shop specialized in books by or about Franz Kafka.
 
-It uses Apache Kafka as its messaging platform, due to its singular characteristics:
+Coincidentally, it uses Apache Kafka as its messaging platform, due to its singular characteristics:
 
  - Data streaming in real time, supports also batching
  - Decouples microservices with event driven architecture
@@ -52,7 +52,7 @@ that will consume events. We will also use Kafka to transform and aggregate even
 
 ### Source systems
 
-The following systems  
+The following systems will ingest data into Kafka.
 
 #### CRM and Inventory Management System
 
@@ -64,7 +64,7 @@ tables in real time to Kafka.
 
 #### Mocked Components
 
-The following components do not actually exist. The events that would be produced by them are mocked by a Java producer.
+The following components have events mocked by a Java producer, which we will run as part of this tutorial.
 
 ##### Microservices logs
 
@@ -72,26 +72,56 @@ When a user views a product or adds an item in the shopping cart, an event is pr
 When an order is placed, then the event is published to the topic “purchase”. The field “packet” is null at first, then
 updated as soon as the order is shipped. But the order isn’t shipped before it’s paid for!
 
-##### Payment Partner
+##### Payment API Endpoint
 
-The Payment Notification microservice knows when customers have paid for an order (it calls an API, is called by a 
-webhook, triggered by a file transfer, whatever), and produces a message in the “payment” topic when it happens.
-For simplicity, all orders are paid in full.
+The Payment API Endpoint microservice knows when customers have paid for an order. Let's say it calls an API, or it is 
+called by a webhook, triggered by a file transfer, whatever. The point is that it produces a message in the “payment” 
+topic when it happens. For simplicity, all orders are paid in full.
 
 ##### Shipping Partner
 
-Once the order is paid for, it is shipped. First, the “purchase” topic is updated with the packet id.
-The Shipping Notification microservice is triggered by the shipping company (let’s say an API is called) and updates the
-topic “shipping” with statuses “underway”, “delivered”, or “lost”.
+Once the order is paid for, it is shipped. Once the Kafka Bookstore ships an item, it updates the “purchase” topic 
+with the packet id informed by the Shipping partner. Then, the Shipping Partner microservice is triggered by the 
+shipping company (let’s say at calls ans API) and produces a
+message in the topic “shipping” with the status “underway”, “delivered”, or “lost”.
 
-### Target systems
+### Kafka Cluster
 
-**TODO**
+The Kafka Cluster groups all basic Kafka infrastructure. It contain one Zookeeper instance, one Kafka Broker, and one 
+Schema Registry instance. It is where all Kafka topics are stored together with their metadata (schemas).
 
+### Data Transformation
 
-### Topic recap
+We will use both KSQL and Kafka Streams to consume streaming data from Kafka Topics, transform and aggregate it, and 
+write (produce) them to other Kafka topics.
 
-**TODO**
+### Web UIs
+
+A user can interact with Kafka using command-line tools, APIs, or Web UIs. In this tutorial, the following web UIs are
+available:
+
+ - Confluent Control Center
+ - Landoop Topics UI, Connect UI, Schema Registry UI
+
+### Rest Proxy
+
+Exposes a REST interface that can be used by streaming clients that do not dispose of a native client library. 
+We won't use it for this demo. 
+
+### Elasticsearch and Kibana
+
+We will use Kafka Connect to write some data to Elasticsearch and visualize them using Kibana.
+
+### Topic overview
+
+The following Kafka Topics will be used in this tutorial:
+
+ * Book
+ * Customer
+ * Interaction
+ * Purchase
+ * Payment
+ * Shipping
 
 ## Running Platform
 
