@@ -30,7 +30,7 @@ Coincidentally, it uses Apache Kafka as its messaging platform, due to its singu
  - Excellent tools and support from Confluent ;)
  - It’s awesome!
 
-Since a couple of weeks now, a minimum viable product (MVP) has been released and it’s attracting a lot of attention. 
+Since a couple of weeks now, a minimum viable product (MVP) has been released and it’s attracting a lot of attention.
 The workflow is the following:
 
  1. Customer signs up/logs in
@@ -45,7 +45,7 @@ Kafka is used as a data streaming platform, to decouple microservices and transf
 
 ## Architecture
 
-As seen in the diagram below, there are source systems that produce events (i.e. write data to Kafka) and target systems 
+As seen in the diagram below, there are source systems that produce events (i.e. write data to Kafka) and target systems
 that will consume events. We will also use Kafka to transform and aggregate events.
 
 ![alt text](kafka-bookstore-architecture.png "Kafka Bookstore Tutorial Architecure")
@@ -57,9 +57,9 @@ The following systems will ingest data into Kafka.
 #### CRM and Inventory Management System
 
 We assume there is a CRM and Inventory Management System system that holds information regarding customers and products.
-The systems that manage them use MySQL to keep their data. 
+The systems that manage them use MySQL to keep their data.
 All the needed information can be found in the “customer” and “product” tables.
-As part of this tutorial, we'll use Kafka Connect and a CDC (change data capture) tool to stream all updates to those 
+As part of this tutorial, we'll use Kafka Connect and a CDC (change data capture) tool to stream all updates to those
 tables in real time to Kafka.
 
 #### Mocked Components
@@ -74,25 +74,25 @@ updated as soon as the order is shipped. But the order isn’t shipped before it
 
 ##### Payment API Endpoint
 
-The Payment API Endpoint microservice knows when customers have paid for an order. Let's say it calls an API, or it is 
-called by a webhook, triggered by a file transfer, whatever. The point is that it produces a message in the “payment” 
+The Payment API Endpoint microservice knows when customers have paid for an order. Let's say it calls an API, or it is
+called by a webhook, triggered by a file transfer, whatever. The point is that it produces a message in the “payment”
 topic when it happens. For simplicity, all orders are paid in full.
 
 ##### Shipping Partner
 
-Once the order is paid for, it is shipped. Once the Kafka Bookstore ships an item, it updates the “purchase” topic 
-with the packet id informed by the Shipping partner. Then, the Shipping Partner microservice is triggered by the 
+Once the order is paid for, it is shipped. Once the Kafka Bookstore ships an item, it updates the “purchase” topic
+with the packet id informed by the Shipping partner. Then, the Shipping Partner microservice is triggered by the
 shipping company (let’s say at calls ans API) and produces a
 message in the topic “shipping” with the status “underway”, “delivered”, or “lost”.
 
 ### Kafka Cluster
 
-The Kafka Cluster groups all basic Kafka infrastructure. It contain one Zookeeper instance, one Kafka Broker, and one 
+The Kafka Cluster groups all basic Kafka infrastructure. It contain one Zookeeper instance, one Kafka Broker, and one
 Schema Registry instance. It is where all Kafka topics are stored together with their metadata (schemas).
 
 ### Data Transformation
 
-We will use both KSQL and Kafka Streams to consume streaming data from Kafka Topics, transform and aggregate it, and 
+We will use both KSQL and Kafka Streams to consume streaming data from Kafka Topics, transform and aggregate it, and
 write (produce) them to other Kafka topics.
 
 ### Web UIs
@@ -105,8 +105,8 @@ available:
 
 ### Rest Proxy
 
-Exposes a REST interface that can be used by streaming clients that do not dispose of a native client library. 
-We won't use it for this demo. 
+Exposes a REST interface that can be used by streaming clients that do not dispose of a native client library.
+We won't use it for this demo.
 
 ### Elasticsearch and Kibana
 
@@ -127,7 +127,7 @@ The following Kafka Topics will be used in this tutorial:
 
 Your choice: Local docker images or use VirtualBox image.
 
-If you have an outdated laptop (i.e. with less than 16 GB RAM), please have a look 
+If you have an outdated laptop (i.e. with less than 16 GB RAM), please have a look
 [here](https://ipt.jiveon.com/docs/DOC-2169).
 
 ### Prerequisites
@@ -147,13 +147,13 @@ Then clone this repository: https://github.com/fabiohecht/kafka-bookstore-tutori
 Please install Virtual Box and get the image from a USB stick (ask Fabio).
 It already has Docker and all the stuff in it.
 
-### Get the platform started   
+### Get the platform started
 
 Let's first make sure you have all last-minute changes. Open a terminal and type:
 
     cd IdeaProjects/kafka-bookstore-tutorial
     git pull
-    
+
 Now let's start all Docker containers. Open a terminal and type:
 
     cd docker-compose
@@ -167,7 +167,7 @@ It may take like a minute until all is running. You can see the logs of each con
 
     docker-compose logs [image-name]
 
-On my machine, the elasticsearch image could not start, 
+On my machine, the elasticsearch image could not start,
 
     elasticsearch         | [2018-05-24T15:20:11,779][INFO ][o.e.b.BootstrapChecks    ] [nw0uKIe] bound or publishing to a non-loopback address, enforcing bootstrap checks
     elasticsearch         | ERROR: [1] bootstrap checks failed
@@ -182,7 +182,7 @@ Kafka command-line tools:
     TODO
 
 You should be able to use a browser and see a few web UIs running:
-      
+
  - Confluent Control Center: http://localhost:9021
  - Landoop Kafka Topics UI: http://localhost:8000
  - Landoop Confluent Schema Registry UI: http://localhost:8001
@@ -196,16 +196,77 @@ The Web UIs are useful to visualize some information. There are also command lin
 We will use Kafka Connect to stream two MySQL tables to Kafka topics, and start a Java application that
 mocks events.
 
-### MySQL Kafka Connect
+### MySQL
 
 A MySQL Server was started by Docker Compose and preloaded with mock data. You can check it out with:
 
-    docker-compose exec mysql mysql -p kafka-bookstore
-    Enter password: secret
+    docker-compose exec mysql bash -c 'mysql -u $MYSQL_USER -p$MYSQL_PASSWORD inventory'
 
-[**TODO** copy paste]
+From the MySQL prompt, explore the two tables:
 
-When you are done, exit with crtl+D.
+    SHOW TABLES;
+    SELECT * FROM BOOK;
+    SELECT * FROM CUSTOMERS;
+
+
+When you are done, exit with ctrl+D.
+
+### Stream MySQL changes into Kafka
+
+The Docker Compose set of containers includes one for Kafka Connect with the Confluent Platform connectors present (covering JDBC, HDFS, S3, and Elasticsearch), and another for Kafka Connect with the Debezium MySQL CDC connector.
+
+To configure Debezium, run the follow call to the Kafka Connect REST endpoint:
+
+
+
+    curl -i -X POST -H "Accept:application/json" \
+        -H  "Content-Type:application/json" http://localhost:8083/connectors/ \
+        -d '{
+          "name": "mysql-source-inventory-raw",
+          "config": {
+                "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+                "database.hostname": "mysql",
+                "database.port": "3306",
+                "database.user": "debezium",
+                "database.password": "dbz",
+                "database.server.id": "44",
+                "database.server.name": "asgard",
+                "table.whitelist": "demo.customers",
+                "database.history.kafka.bootstrap.servers": "kafka:29092",
+                "database.history.kafka.topic": "dbhistory.demo" ,
+                "include.schema.changes": "true",
+                "transforms": "unwrap,InsertTopic,InsertSourceDetails",
+                "transforms.unwrap.type": "io.debezium.transforms.UnwrapFromEnvelope",
+                "transforms.InsertTopic.type":"org.apache.kafka.connect.transforms.InsertField$Value",
+                "transforms.InsertTopic.topic.field":"messagetopic",
+                "transforms.InsertSourceDetails.type":"org.apache.kafka.connect.transforms.InsertField$Value",
+                "transforms.InsertSourceDetails.static.field":"messagesource",
+                "transforms.InsertSourceDetails.static.value":"Debezium CDC from MySQL on asgard"
+                }
+        }'
+
+    curl -i -X POST -H "Accept:application/json" \
+        -H  "Content-Type:application/json" http://localhost:8083/connectors/ \
+        -d '{
+          "name": "mysql-source-inventory-raw",
+          "config": {
+                "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+                "database.hostname": "mysql",
+                "database.port": "3306",
+                "database.user": "debezium",
+                "database.password": "dbz",
+                "database.server.id": "44",
+                "database.server.name": "asgard",
+                "table.whitelist": "demo.customers",
+                "database.history.kafka.bootstrap.servers": "kafka:29092",
+                "database.history.kafka.topic": "dbhistory.demo" ,
+                "include.schema.changes": "true",
+                "transforms": "addTopicSuffix",
+                "transforms.addTopicSuffix.type":"org.apache.kafka.connect.transforms.RegexRouter",
+                "transforms.addTopicSuffix.regex":"(.*)",
+                "transforms.addTopicSuffix.replacement":"$1-raw"
+                }
+        }'
 
 
 **TODO** set up debezium to CDC it across (can then demo realtime changes of data in DB reflecting in Kafka + KSQL processing)
@@ -228,15 +289,15 @@ Press CTRL-C to exit.
 ### Start Java Mock Producer
 
 Let's start the Java Mock event producer. All of this can be done from IntelliJ's, which is contained in the VM.
-Let's first compile the project with Maven. On the right-hand side of IntelliJ's window, under "Maven Projects", 
+Let's first compile the project with Maven. On the right-hand side of IntelliJ's window, under "Maven Projects",
 "Lifecycle", double click "clean", then double click "package".
 
- * On the project navigator (left part of the screen), navigate to src/main/java/...producer. 
+ * On the project navigator (left part of the screen), navigate to src/main/java/...producer.
  * Open the class MockProducer. Have a look at how we produce events to Kafka by calling producer.send().
  * Run the MockProducer -- right click file name and "Run 'MockProducer.main()'.
  * If all goes well, we are producing mock events to Kafka!
 
-Like before, you can use the kafka-avro-console-consumer or Landoop's UI to see the events coming in your topics. 
+Like before, you can use the kafka-avro-console-consumer or Landoop's UI to see the events coming in your topics.
 You can choose whether to keep it running in the background or to stop it now and start when you want events to be produced.
 
 In real life, a Java Spring Boot microservice could expose an API that, when called by the Shipping partner or the Post,
@@ -248,7 +309,7 @@ For more information about the data schemas used, have a look at src/main/resour
 in Avro format, which is fairly human-readable (Json). The spec can be found at http://avro.apache.org/docs/1.8.2/spec.html.
 When the project is compiled with maven, the Java classes for the data model are generated, as specified in the pom.xml
 file under &lt;buld>&lt;plugins>. You can test it with “mvn clean compile” from the command line (current directory is project
-root) or using IntelliJ’s “Maven Project” tool button (seen on the right-hand side), under kafka-bookstore-tutorial, 
+root) or using IntelliJ’s “Maven Project” tool button (seen on the right-hand side), under inventory-tutorial,
 Lifecycle, double click “clean”, double click “compile”.
 
 ## Stream Data Transformation with KSQL
@@ -402,7 +463,7 @@ WINDOW TUMBLING (SIZE 1 HOUR) \
 GROUP BY bookIds;
 
 ### Average ticket
-    
+
 **TODO** this is not average ticket, it should be average purchase.totalAmount, how about do it per region or so
 
 Persist as a table:
@@ -427,11 +488,11 @@ Persist as a table:
 
 ## Stream data Transformation with Kafka Streams
 
-A Kafka Streams application is a normal Java app, which makes it profit from Java's power and tool support. 
-Most Kafka Streams applications both read and write data to Kafka topics, though external systems can also be involved, 
+A Kafka Streams application is a normal Java app, which makes it profit from Java's power and tool support.
+Most Kafka Streams applications both read and write data to Kafka topics, though external systems can also be involved,
 after all, the data is in a Java application.
 
-While Kafka Streams is much more mature and powerful than KSQL, it does require a bit of experience with lambda 
+While Kafka Streams is much more mature and powerful than KSQL, it does require a bit of experience with lambda
 expressions and the Kafka Streams API.
 
 Some current limitations of KSQL:
@@ -442,12 +503,12 @@ Some current limitations of KSQL:
  - cannot use avro keys
  - cannot use avro values that reference existing data types, or records of records, or arrays of records
 
-The goal is that you get a feeling about the basics of Kafka Streams and try out a few examples. 
+The goal is that you get a feeling about the basics of Kafka Streams and try out a few examples.
 
 ### Average shipping time
 
-In this example, we calculate the average time the shipping partner takes to deliver ur orders. 
-We work with one input topic "shipping", correlating the timestamp of the record with status "underway" with the one 
+In this example, we calculate the average time the shipping partner takes to deliver ur orders.
+We work with one input topic "shipping", correlating the timestamp of the record with status "underway" with the one
 with status "delivered".
 
  * Open the file ch.ipt.handson.streams.ShipmentTimeStreamsApp
@@ -477,7 +538,7 @@ and [here](https://kafka.apache.org/11/javadoc/org/apache/kafka/streams/package-
 
 ## Stream data out of Kafka
 
-We'll use Kafka Connect again, but this time to stream data out of Kafka to Elastic Search. 
+We'll use Kafka Connect again, but this time to stream data out of Kafka to Elastic Search.
 Then, we'll see cool charts in Kibana.
 
 ### Kafka Connect to Elastic Search
