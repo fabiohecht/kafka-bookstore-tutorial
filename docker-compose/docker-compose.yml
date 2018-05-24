@@ -168,38 +168,35 @@ services:
       CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
       PORT: 9021
 
-
 #Landoop UIs
-#  schema-registry-ui:
-#    image: landoop/schema-registry-ui:0.9.4
-#    hostname: schema-registry-ui
-#    ports:
-#      - "8001:8000"
-#    environment:
-#      SCHEMAREGISTRY_URL: http://schema-registry:8081/
-#      PROXY: "true"
-#    depends_on:
-#      - schema-registry
-#    extra_hosts:
-#      - "moby:127.0.0.1"
-#
+  schema-registry-ui:
+    image: landoop/schema-registry-ui:0.9.4
+    hostname: schema-registry-ui
+    ports:
+      - "8001:8000"
+    environment:
+      SCHEMAREGISTRY_URL: http://schema-registry:8081/
+      PROXY: "true"
+    depends_on:
+      - schema-registry
+    extra_hosts:
+      - "moby:127.0.0.1"
 
-#
-#  kafka-topics-ui:
-#    image: landoop/kafka-topics-ui:0.9.3
-#    hostname: kafka-topics-ui
-#    ports:
-#      - "8000:8000"
-#    environment:
-#      KAFKA_REST_PROXY_URL: "http://kafka-rest-proxy:8082/"
-#      PROXY: "true"
-#    depends_on:
-#      - zookeeper
-#      - kafka
-#      - schema-registry
-#      - kafka-rest-proxy
-#    extra_hosts:
-#      - "moby:127.0.0.1"
+  kafka-topics-ui:
+    image: landoop/kafka-topics-ui:0.9.3
+    hostname: kafka-topics-ui
+    ports:
+      - "8000:8000"
+    environment:
+      KAFKA_REST_PROXY_URL: "http://kafka-rest-proxy:8082/"
+      PROXY: "true"
+    depends_on:
+      - zookeeper
+      - kafka
+      - schema-registry
+      - kafka-rest-proxy
+    extra_hosts:
+      - "moby:127.0.0.1"
   kafka-connect-ui:
     image: landoop/kafka-connect-ui:0.9.4
     hostname: kafka-connect-ui
@@ -216,39 +213,39 @@ services:
 
 # External systems
 
-#  elasticsearch:
-#    image: docker.elastic.co/elasticsearch/elasticsearch:6.2.4
-#    container_name: elasticsearch
-#    #restart: always
-#    depends_on:
-#      - kafka-connect
-#    ports:
-#      - "9200:9200"
-#      - "9300:9300"
-#    environment:
-#      xpack.security.enabled: "false"
-#      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
-#  kibana:
-#    image: docker.elastic.co/kibana/kibana:6.2.4
-#    container_name: kibana
-#    restart: always
-#    depends_on:
-#      - elasticsearch
-#    ports:
-#      - "5601:5601"
-#    environment:
-#      xpack.security.enabled: "false"
-#      discovery.type: "single-node"
-#
-#  mysql:
-#    image: mysql:5.7
-#    container_name: mysql
-#    ports:
-#      - 3306:3306
-#    volumes:
-#      - ./dump.sql:/docker-entrypoint-initdb.d/dump.sql
-#    environment:
-#      MYSQL_ROOT_PASSWORD: secret
-#      MYSQL_DATABASE: name_db
-#      MYSQL_USER: user
-#      MYSQL_PASSWORD: password
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.2.4
+    container_name: elasticsearch
+    #restart: always
+    depends_on:
+      - kafka-connect
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+  kibana:
+    image: docker.elastic.co/kibana/kibana:6.2.4
+    container_name: kibana
+    restart: always
+    depends_on:
+      - elasticsearch
+    ports:
+      - "5601:5601"
+    environment:
+      xpack.security.enabled: "false"
+      discovery.type: "single-node"
+
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    ports:
+      - 3306:3306
+    volumes:
+      - ./dump.sql:/docker-entrypoint-initdb.d/dump.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: name_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password

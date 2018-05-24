@@ -1,16 +1,17 @@
+
 # ipt-Confluent Workshop :: Kafka Bookstore Tutorial
 
 ## This tutorial
 
+In this tutorial, we will demonstrate several aspects of Kafka.
+
  1. Use Case
- 1. System Architecture
+ 1. Architecture
  1. Running Platform
- 1. Data Ingestion
- 1. Stream data transformation with KSQL
- 1. Stream data transformation with Kafka Streams
- 1. Stream data out of Kafka with Kafka Connect 
-
-
+ 1. Stream Data into Kafka
+ 1. Stream Data Transformation with KSQL
+ 1. Stream data Transformation with Kafka Streams
+ 1. Stream data out of Kafka
 
 ## Use Case
 
@@ -20,36 +21,36 @@ It uses Apache Kafka as its messaging platform, due to its singular characterist
 
  - Data streaming in real time, supports also batching
  - Decouples microservices with event driven architecture
- - Integrated storage, which allows messages to be reprocessed in the future
+ - Integrated storage, which allows messages to be replayed in the future
  - Wide range of connectors to import and export data into and out of it (Kafka Connect)
- - Stream analysis with KSQL and Kafka Streams
+ - Stream analysis and transformations with KSQL and Kafka Streams
  - Elasticity, scalability, robustness, and high availability
+ - Cloud native
  - Open source with active community
  - Excellent tools and support from Confluent ;)
  - It’s awesome!
 
 Since a couple of weeks now, a minimum viable product (MVP) has been released and it’s attracting a lot of attention. 
-The workflow is quite simple:
+The workflow is the following:
 
  1. Customer signs up/logs in
- 1. Customer browses products
+ 1. Customer browses books
  1. Customer adds products to cart
  1. Customer places an order
  1. Customer pays (informed by third-party payment partner)
  1. Order is shipped (informed by shipping partner)
  1. Shipment is delivered or lost (informed by shipping partner)
 
-**TODO** describe use case for transforming and outputting events
-
 Kafka is used as a data streaming platform, to decouple microservices and transform events.
+
+**TODO** describe use case for transforming and outputting events
 
 ## Architecture
 
-As seen in the diagram below, there are source systems that can
-produce events (i.e. write data to Kafka) and target systems that will consume events. We will also use Kafka to 
-transform and aggregate events.
+As seen in the diagram below, there are source systems that produce events (i.e. write data to Kafka) and target systems 
+that will consume events. We will also use Kafka to transform and aggregate events.
 
-[**TODO** diagram]
+![alt text](kafka-bookstore-architecture.png "Kafka Bookstore Tutorial Architecure")
 
 ### Source systems
 
@@ -86,6 +87,11 @@ The Shipping Notification microservice is triggered by the shipping company (let
 topic “shipping” with statuses “underway”, “delivered”, or “lost”.
 
 ### Target systems
+
+**TODO**
+
+
+### Topic recap
 
 **TODO**
 
@@ -133,7 +139,13 @@ It may take like a minute until all is running. You can see the logs of each con
 
     docker-compose logs [image-name]
 
-On my machine, the elasticsearch image could not start, I had to do a:
+On my machine, the elasticsearch image could not start, 
+
+    elasticsearch         | [2018-05-24T15:20:11,779][INFO ][o.e.b.BootstrapChecks    ] [nw0uKIe] bound or publishing to a non-loopback address, enforcing bootstrap checks
+    elasticsearch         | ERROR: [1] bootstrap checks failed
+    elasticsearch         | [1]: max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]
+
+Fix was doing a:
 
     sudo sysctl -w vm.max_map_count=262144
 
@@ -151,7 +163,7 @@ You should be able to use a browser and see a few web UIs running:
 
 The Web UIs are useful to visualize some information. There are also command line tools and APIs that are more powerful.
 
-## Data Ingestion
+## Stream Data into Kafka
 
 We will use Kafka Connect to stream two MySQL tables to Kafka topics, and start a Java application that
 mocks events.
@@ -211,7 +223,7 @@ file under &lt;buld>&lt;plugins>. You can test it with “mvn clean compile” f
 root) or using IntelliJ’s “Maven Project” tool button (seen on the right-hand side), under kafka-bookstore-tutorial, 
 Lifecycle, double click “clean”, double click “compile”.
 
-## KSQL
+## Stream Data Transformation with KSQL
 
 KSQL is a new product from Confluent officially released in March 2018... [TODO shortly describe KSQL]
 
@@ -385,7 +397,7 @@ Persist as a table:
   [5]: https://docs.confluent.io/current/quickstart/ce-quickstart.html
   [6]: https://www.youtube.com/playlist?list=PLa7VYi0yPIH2eX8q3mPpZAn3qCS1eDX8W
 
-## Kafka Streams
+## Stream data Transformation with Kafka Streams
 
 A Kafka Streams application is a normal Java app, which makes it profit from Java's power and tool support. 
 Most Kafka Streams applications both read and write data to Kafka topics, though external systems can also be involved, 
@@ -435,7 +447,7 @@ More information about Kafka Streams can be found at
 and [here](https://kafka.apache.org/11/javadoc/org/apache/kafka/streams/package-summary.html) is some good old Javadoc.
 
 
-## Stream data out of Kafka and visualize it
+## Stream data out of Kafka
 
 We'll use Kafka Connect again, but this time to stream data out of Kafka to Elastic Search. 
 Then, we'll see cool charts in Kibana.
@@ -471,6 +483,7 @@ Create a connector that streams the book view count to Elasticsearch
 
 
 **some reference**
+
     curl -X "POST" "http://localhost:8083/connectors/" \
          -H "Content-Type: application/json" \
          -d '{
@@ -494,3 +507,37 @@ Create a connector that streams the book view count to Elasticsearch
 ### Visualize data in Kibana
 
 **TODO**
+
+
+
+
+
+
+
+---
+
+
+Create elasticsearch index first?
+
+
+Fabio's tests:
+
+    curl -X "POST" "http://localhost:8083/connectors/" \
+         -H "Content-Type: application/json" \
+         -d '{
+      "name": "es_sink_book",
+      "config": {
+        "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+        "topics": "book",
+        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "value.converter": "io.confluent.connect.avro.AvroConverter",
+        "key.ignore": "true",
+        "schema.ignore": "false",
+        "type.name": "type.name=kafkaconnect",
+        "topic.index.map": "book:book",
+        "connection.url": "http://localhost:9200",
+        "transforms": "ExtractTimestamp",
+        "transforms.ExtractTimestamp.type": "org.apache.kafka.connect.transforms.InsertField$Value",
+        "transforms.ExtractTimestamp.timestamp.field" : "EXTRACT_TS"
+      }
+    }'
