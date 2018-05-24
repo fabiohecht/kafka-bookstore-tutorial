@@ -493,3 +493,4 @@ Create a connector that streams the book view count to Elasticsearch
 
 ### Visualize data in Kibana
 
+**TODO**
