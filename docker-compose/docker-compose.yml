@@ -51,87 +51,6 @@ services:
     extra_hosts:
       - "moby:127.0.0.1"
 
-  # Runs the Kafka KSQL Server
-  ksql-server:
-    image: "confluentinc/ksql-cli:5.0.0-beta1"
-    hostname: ksql-server
-    ports:
-      - '8088:8088'
-    depends_on:
-      - kafka
-      - schema-registry
-    # Note: The container's `run` script will perform the same readiness checks
-    # for Kafka and Confluent Schema Registry, but that's ok because they complete fast.
-    # The reason we check for readiness here is that we can insert a sleep time
-    # for topic creation before we start the application.
-    command: "bash -c 'echo Waiting for Kafka to be ready... && \
-                       cub kafka-ready -b kafka:29092 1 30 && \
-                       echo Waiting for Confluent Schema Registry to be ready... && \
-                       cub sr-ready schema-registry 8081 30 && \
-                       echo Waiting a few seconds for topic creation to finish... && \
-                       sleep 20 && \
-                       /usr/bin/ksql-server-start /etc/ksql/ksql-server.properties'"
-    environment:
-      KSQL_CONFIG_DIR: "/etc/ksql"
-      KSQL_OPTS: "-Dbootstrap.servers=kafka:29092 -Dksql.schema.registry.url=http://schema-registry:8081 -Dlisteners=http://0.0.0.0:8088 -Dksql.streams.producer.retries=2147483647"
-      KSQL_LOG4J_OPTS: "-Dlog4j.configuration=file:/etc/ksql/log4j-rolling.properties"
-
-    extra_hosts:
-      - "moby:127.0.0.1"
-
-
-  # Runs the KSQL CLI
-  ksql-cli:
-    image: "confluentinc/ksql-cli:5.0.0-beta1"
-    hostname: ksql-cli
-    depends_on:
-      - kafka
-      - schema-registry
-      - ksql-server
-    command: "perl -e 'while(1){ sleep 99999 }'"
-    environment:
-      KSQL_CONFIG_DIR: "/etc/ksql"
-      KSQL_LOG4J_OPTS: "-Dlog4j.configuration=file:/etc/ksql/log4j-rolling.properties"
-      STREAMS_BOOTSTRAP_SERVERS: kafka:29092
-      STREAMS_SCHEMA_REGISTRY_HOST: schema-registry
-      STREAMS_SCHEMA_REGISTRY_PORT: 8081
-    extra_hosts:
-      - "moby:127.0.0.1"
-
-  control-center:
-    image: confluentinc/cp-enterprise-control-center
-    hostname: control-center
-    depends_on:
-      - zookeeper
-      - kafka
-      - schema-registry
-      - kafka-connect
-    ports:
-      - "9021:9021"
-    environment:
-      CONTROL_CENTER_BOOTSTRAP_SERVERS: 'kafka:9092'
-      CONTROL_CENTER_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      CONTROL_CENTER_CONNECT_CLUSTER: 'kafka-connect:8083'
-      CONTROL_CENTER_REPLICATION_FACTOR: 1
-      CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
-      CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
-      PORT: 9021
-
-
-#Landoop UIs
-  schema-registry-ui:
-    image: landoop/schema-registry-ui:0.9.4
-    hostname: schema-registry-ui
-    ports:
-      - "8001:8000"
-    environment:
-      SCHEMAREGISTRY_URL: http://schema-registry:8081/
-      PROXY: "true"
-    depends_on:
-      - schema-registry
-    extra_hosts:
-      - "moby:127.0.0.1"
-
   kafka-rest-proxy:
     image: confluentinc/cp-kafka-rest:4.1.0
     hostname: kafka-rest-proxy
@@ -147,22 +66,6 @@ services:
       - zookeeper
       - kafka
       - schema-registry
-    extra_hosts:
-      - "moby:127.0.0.1"
-
-  kafka-topics-ui:
-    image: landoop/kafka-topics-ui:0.9.3
-    hostname: kafka-topics-ui
-    ports:
-      - "8000:8000"
-    environment:
-      KAFKA_REST_PROXY_URL: "http://kafka-rest-proxy:8082/"
-      PROXY: "true"
-    depends_on:
-      - zookeeper
-      - kafka
-      - schema-registry
-      - kafka-rest-proxy
     extra_hosts:
       - "moby:127.0.0.1"
 
@@ -198,6 +101,104 @@ services:
     extra_hosts:
       - "moby:127.0.0.1"
 
+
+  # KSQL
+  ksql-server:
+    image: "confluentinc/ksql-cli:5.0.0-beta1"
+    hostname: ksql-server
+    ports:
+      - '8088:8088'
+    depends_on:
+      - kafka
+      - schema-registry
+    # Note: The container's `run` script will perform the same readiness checks
+    # for Kafka and Confluent Schema Registry, but that's ok because they complete fast.
+    # The reason we check for readiness here is that we can insert a sleep time
+    # for topic creation before we start the application.
+    command: "bash -c 'echo Waiting for Kafka to be ready... && \
+                       cub kafka-ready -b kafka:29092 1 30 && \
+                       echo Waiting for Confluent Schema Registry to be ready... && \
+                       cub sr-ready schema-registry 8081 30 && \
+                       echo Waiting a few seconds for topic creation to finish... && \
+                       sleep 20 && \
+                       echo Starting KSQL... && \
+                       /usr/bin/ksql-server-start /etc/ksql/ksql-server.properties'"
+    environment:
+      KSQL_CONFIG_DIR: "/etc/ksql"
+      KSQL_OPTS: "-Dbootstrap.servers=kafka:29092 -Dksql.schema.registry.url=http://schema-registry:8081 -Dlisteners=http://0.0.0.0:8088 -Dksql.streams.producer.retries=2147483647"
+      KSQL_LOG4J_OPTS: "-Dlog4j.configuration=file:/etc/ksql/log4j-rolling.properties"
+
+    extra_hosts:
+      - "moby:127.0.0.1"
+
+  ksql-cli:
+    image: "confluentinc/ksql-cli:5.0.0-beta1"
+    hostname: ksql-cli
+    depends_on:
+      - kafka
+      - schema-registry
+      - ksql-server
+    command: "perl -e 'while(1){ sleep 99999 }'"
+    environment:
+      KSQL_CONFIG_DIR: "/etc/ksql"
+      KSQL_LOG4J_OPTS: "-Dlog4j.configuration=file:/etc/ksql/log4j-rolling.properties"
+      STREAMS_BOOTSTRAP_SERVERS: kafka:29092
+      STREAMS_SCHEMA_REGISTRY_HOST: schema-registry
+      STREAMS_SCHEMA_REGISTRY_PORT: 8081
+    extra_hosts:
+      - "moby:127.0.0.1"
+
+  control-center:
+    image: confluentinc/cp-enterprise-control-center
+    hostname: control-center
+    depends_on:
+      - zookeeper
+      - kafka
+      - schema-registry
+      - kafka-connect
+    ports:
+      - "9021:9021"
+    environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: 'kafka:29092'
+      CONTROL_CENTER_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      CONTROL_CENTER_CONNECT_CLUSTER: 'kafka-connect:8083'
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+      CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
+      CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
+      PORT: 9021
+
+
+#Landoop UIs
+#  schema-registry-ui:
+#    image: landoop/schema-registry-ui:0.9.4
+#    hostname: schema-registry-ui
+#    ports:
+#      - "8001:8000"
+#    environment:
+#      SCHEMAREGISTRY_URL: http://schema-registry:8081/
+#      PROXY: "true"
+#    depends_on:
+#      - schema-registry
+#    extra_hosts:
+#      - "moby:127.0.0.1"
+#
+
+#
+#  kafka-topics-ui:
+#    image: landoop/kafka-topics-ui:0.9.3
+#    hostname: kafka-topics-ui
+#    ports:
+#      - "8000:8000"
+#    environment:
+#      KAFKA_REST_PROXY_URL: "http://kafka-rest-proxy:8082/"
+#      PROXY: "true"
+#    depends_on:
+#      - zookeeper
+#      - kafka
+#      - schema-registry
+#      - kafka-rest-proxy
+#    extra_hosts:
+#      - "moby:127.0.0.1"
   kafka-connect-ui:
     image: landoop/kafka-connect-ui:0.9.4
     hostname: kafka-connect-ui
@@ -211,51 +212,42 @@ services:
     extra_hosts:
       - "moby:127.0.0.1"
 
-#  mongo:
-#      image: mongo
+
+# External systems
+
+#  elasticsearch:
+#    image: docker.elastic.co/elasticsearch/elasticsearch:6.2.4
+#    container_name: elasticsearch
+#    #restart: always
+#    depends_on:
+#      - kafka-connect
+#    ports:
+#      - "9200:9200"
+#      - "9300:9300"
+#    environment:
+#      xpack.security.enabled: "false"
+#      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+#  kibana:
+#    image: docker.elastic.co/kibana/kibana:6.2.4
+#    container_name: kibana
+#    restart: always
+#    depends_on:
+#      - elasticsearch
+#    ports:
+#      - "5601:5601"
+#    environment:
+#      xpack.security.enabled: "false"
+#      discovery.type: "single-node"
 #
-#  mongo-api:
-#      image: aleksxp/docker-eve-python
-#      ports:
-#          - "5000:5000"
-#      volumes:
-#          - .:/usr/src/app
-#      depends_on:
-#          - mongo
-
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:6.2.4
-    container_name: elasticsearch
-    #restart: always
-    depends_on:
-      - kafka-connect
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    environment:
-      xpack.security.enabled: "false"
-      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
-  kibana:
-    image: docker.elastic.co/kibana/kibana:6.2.4
-    container_name: kibana
-    restart: always
-    depends_on:
-      - elasticsearch
-    ports:
-      - "5601:5601"
-    environment:
-      xpack.security.enabled: "false"
-      discovery.type: "single-node"
-
-  mysql:
-    image: mysql:5.7
-    container_name: mysql
-    ports:
-      - 3306:3306
-    volumes:
-      - ./dump.sql:/docker-entrypoint-initdb.d/dump.sql
-    environment:
-      MYSQL_ROOT_PASSWORD: secret
-      MYSQL_DATABASE: name_db
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
+#  mysql:
+#    image: mysql:5.7
+#    container_name: mysql
+#    ports:
+#      - 3306:3306
+#    volumes:
+#      - ./dump.sql:/docker-entrypoint-initdb.d/dump.sql
+#    environment:
+#      MYSQL_ROOT_PASSWORD: secret
+#      MYSQL_DATABASE: name_db
+#      MYSQL_USER: user
+#      MYSQL_PASSWORD: password
