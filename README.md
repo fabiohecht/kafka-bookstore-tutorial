@@ -14,12 +14,13 @@ It uses Apache Kafka as its messaging platform, due to its singular characterist
  - Excellent tools and support from Confluent ;)
  - It’s awesome!
 
-Since a couple of weeks now, a minimum viable product (MVP) has been released and it’s attracting a lot of attention. The workflow is quite simple:
+Since a couple of weeks now, a minimum viable product (MVP) has been released and it’s attracting a lot of attention. 
+The workflow is quite simple:
 
  1. Customer signs up/logs in
  1. Customer browses products
  1. Customer adds products to cart
- 1. Customer places an order
+ 1. Customer makes a purchase
  1. Customer pays (informed by third-party payment partner)
  1. Order is shipped (informed by shipping partner)
  1. Shipment is delivered or lost (informed by shipping partner)
