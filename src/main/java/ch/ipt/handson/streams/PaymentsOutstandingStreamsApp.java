@@ -45,7 +45,7 @@ public class PaymentsOutstandingStreamsApp extends KafkaStreamsApp {
         //on purchase.purchaseId and payment.referenceNumber
         //to know which purchases were paid and which weren't
 
-        //to prepare our join, we need to change the keys of paymentStream, as joins are always key based
+        //we need to change the keys of paymentStream, as joins in Kafka Streams are always key based
         KStream<String, Payment> paymentRekeyed = paymentStream
                 .selectKey((key, value) -> value.getReferenceNumber());
 
@@ -56,11 +56,13 @@ public class PaymentsOutstandingStreamsApp extends KafkaStreamsApp {
                 //for debugging/demo
                 .peek((k, v) -> log.info(" before join: {} {}", k, v.toString()))
 
-                //here comes the join between purchase and payment
+                //here comes the join between the purchase and payment topics
                 //we use an intermediate object PurchasePayment to hold the information about both events
                 .leftJoin(
                         paymentRekeyed,
+                        //each event joined will be transformed in a new event of type PurchasePayment
                         (purchase, payment) -> new PurchasePayment(purchase, payment),
+                        //in Kafka Streams, all joins between 2 streams are window-based
                         JoinWindows.of(Duration.of(5, ChronoUnit.MINUTES).toMillis()))
                 .peek((k, v) -> log.info(" after join: {} {}", k, v.toString()))
 
@@ -71,11 +73,11 @@ public class PaymentsOutstandingStreamsApp extends KafkaStreamsApp {
                 .aggregate(() -> OutstandingPayments.newBuilder().setOutstandingPaymentPurchases(new ArrayList<>()).build(),
                         (key, purchasePayment, aggregate) -> {
                             if (purchasePayment.getPayment() == null) {
-                                //new purchase, payment still outstanding, we add
+                                //payment is outstanding, so we add
                                 aggregate.getOutstandingPaymentPurchases().add(purchasePayment.getPurchase());
                                 aggregate.setAmountOutstanding(aggregate.getAmountOutstanding() + purchasePayment.getPurchase().getTotalAmount());
                             } else {
-                                //purchase has been paid up, hurray! we remove
+                                //purchase has been paid up, hurray! not outstanding anymore!
 
                                 //workaround .remove() not implemented by avro (i.e. getOutstandingPaymentPurchases().remove() throws exception)
                                 List<Purchase> opp = new ArrayList<>(aggregate.getOutstandingPaymentPurchases());
@@ -87,6 +89,8 @@ public class PaymentsOutstandingStreamsApp extends KafkaStreamsApp {
 
                             return aggregate;
                         })
+
+                //output to topic
                 .toStream()
                 .peek((k, v) -> log.info(" write: {} {}", k, v.toString()))
                 .to(OUTPUT_TOPIC);
