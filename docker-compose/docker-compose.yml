@@ -238,14 +238,25 @@ services:
       discovery.type: "single-node"
 
   mysql:
-    image: mysql:5.7
-    container_name: mysql
+    image: debezium/example-mysql:0.8
     ports:
-      - 3306:3306
-    volumes:
-      - ./dump.sql:/docker-entrypoint-initdb.d/dump.sql
+     - 3306:3306
     environment:
-      MYSQL_ROOT_PASSWORD: secret
-      MYSQL_DATABASE: name_db
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
+     - MYSQL_ROOT_PASSWORD=debezium
+     - MYSQL_USER=mysqluser
+     - MYSQL_PASSWORD=mysqlpw
+    volumes:
+     - ./dump.sql:/docker-entrypoint-initdb.d/z99_dump.sql
+
+  connect:
+    image: debezium/connect:0.8
+    ports:
+     - 8083:8083
+    links:
+     - kafka
+     - mysql
+    environment:
+     - BOOTSTRAP_SERVERS=kafka:9092
+     - GROUP_ID=1
+     - CONFIG_STORAGE_TOPIC=my_connect_configs
+     - OFFSET_STORAGE_TOPIC=my_connect_offsets
