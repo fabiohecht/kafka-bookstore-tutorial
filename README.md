@@ -1,9 +1,9 @@
 
 # ipt-Confluent Workshop :: Kafka Bookstore Tutorial
 
-## This tutorial
+## Overview
 
-In this tutorial, we will demonstrate several aspects of Kafka.
+This tutorial is organized in the following sections.
 
  1. Use Case
  1. Architecture
