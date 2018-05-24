@@ -43,8 +43,6 @@ The workflow is the following:
 
 Kafka is used as a data streaming platform, to decouple microservices and transform events.
 
-**TODO** describe use case for transforming and outputting events
-
 ## Architecture
 
 As seen in the diagram below, there are source systems that produce events (i.e. write data to Kafka) and target systems 
