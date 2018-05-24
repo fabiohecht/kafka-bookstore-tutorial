@@ -217,19 +217,19 @@ The Docker Compose set of containers includes one for Kafka Connect with the Con
 
 To configure Debezium, run the follow call to the Kafka Connect REST endpoint:
 
-
+(Flattened schema) :
 
     curl -i -X POST -H "Accept:application/json" \
         -H  "Content-Type:application/json" http://localhost:8083/connectors/ \
         -d '{
-          "name": "mysql-source-inventory-raw",
+          "name": "mysql-source-inventory",
           "config": {
                 "connector.class": "io.debezium.connector.mysql.MySqlConnector",
                 "database.hostname": "mysql",
                 "database.port": "3306",
                 "database.user": "debezium",
                 "database.password": "dbz",
-                "database.server.id": "44",
+                "database.server.id": "42",
                 "database.server.name": "asgard",
                 "table.whitelist": "demo.customers",
                 "database.history.kafka.bootstrap.servers": "kafka:29092",
@@ -244,6 +244,8 @@ To configure Debezium, run the follow call to the Kafka Connect REST endpoint:
                 "transforms.InsertSourceDetails.static.value":"Debezium CDC from MySQL on asgard"
                 }
         }'
+
+(Full payload) : 
 
     curl -i -X POST -H "Accept:application/json" \
         -H  "Content-Type:application/json" http://localhost:8083/connectors/ \
@@ -269,20 +271,14 @@ To configure Debezium, run the follow call to the Kafka Connect REST endpoint:
         }'
 
 
-**TODO** set up debezium to CDC it across (can then demo realtime changes of data in DB reflecting in Kafka + KSQL processing)
-
-**TODO** Kafka Connect config.
-
-
 Check that imported data looks ok. You can use the Landoop Topics UI and look at the data in the "book" and "customer"
 topics. Or go old-school with the command line (we use the kafka-connect container just because it has the command
 line tools installed):
 
-    docker-compose exec kafka-connect kafka-avro-console-consumer --bootstrap-server kafka:29092 --topic book --from-beginning --property schema.registry.url=http://schema-registry:8081
+    docker-compose exec kafka-connect kafka-avro-console-consumer --bootstrap-server kafka:29092 --topic asgard.inventory.book --from-beginning --property schema.registry.url=http://schema-registry:8081
 
 
 Press CTRL-C to exit.
-
 
 [**TODO**] Change data in MySQL and see that Kafka gets updated.
 
@@ -319,6 +315,10 @@ KSQL is a new product from Confluent officially released in March 2018... [TODO 
 Launch the KSQL cli:
 
     docker-compose exec ksql-cli ksql http://ksql-server:8088
+
+If you get an error that the server is not running, start it:
+
+    docker-compose up ksql-server
 
 ### Explore topics
 
