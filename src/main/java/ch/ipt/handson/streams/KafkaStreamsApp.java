@@ -1,4 +1,4 @@
-package streams;
+package ch.ipt.handson.streams;
 
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;

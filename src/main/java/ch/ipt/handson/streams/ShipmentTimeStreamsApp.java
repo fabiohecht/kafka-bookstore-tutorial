@@ -1,4 +1,4 @@
-package streams;
+package ch.ipt.handson.streams;
 
 import ch.ipt.handson.model.Shipping;
 import ch.ipt.handson.model.ShippingTime;
