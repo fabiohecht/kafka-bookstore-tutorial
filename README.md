@@ -3,10 +3,11 @@
 ## This tutorial
 
  1. Use Case
- 2. System Architecture
+ 1. System Architecture
  1. Running Platform
  1. Data Ingestion
- 1. Stream data transformation with KSQL and Kafka Streams
+ 1. Stream data transformation with KSQL
+ 1. Stream data transformation with Kafka Streams
  1. Stream data out of Kafka with Kafka Connect 
 
 
@@ -40,13 +41,15 @@ The workflow is quite simple:
 
 **TODO** describe use case for transforming and outputting events
 
+Kafka is used as a data streaming platform, to decouple microservices and transform events.
+
 ## Architecture
 
-As seen in the diagram below, we will be using Kafka as a data streaming platform. There are source systems that can
-produce events (i.e. write data to Kafka) and target sytems that will consume events. We will also use Kafka to 
+As seen in the diagram below, there are source systems that can
+produce events (i.e. write data to Kafka) and target systems that will consume events. We will also use Kafka to 
 transform and aggregate events.
 
-[TODO diagram]
+[**TODO** diagram]
 
 ### Source systems
 
@@ -82,7 +85,9 @@ Once the order is paid for, it is shipped. First, the “purchase” topic is up
 The Shipping Notification microservice is triggered by the shipping company (let’s say an API is called) and updates the
 topic “shipping” with statuses “underway”, “delivered”, or “lost”.
 
+### Target systems
 
+**TODO**
 
 ## Running Platform
 
@@ -192,10 +197,10 @@ Let's first compile the project with Maven. On the right-hand side of IntelliJ's
  * If all goes well, we are producing mock events to Kafka!
 
 Like before, you can use the kafka-avro-console-consumer or Landoop's UI to see the events coming in your topics. 
+You can choose whether to keep it running in the background or to stop it now and start when you want events to be produced.
 
 In real life, a Java Spring Boot microservice could expose an API that, when called by the Shipping partner or the Post,
 produces the event.
-
 
 #### If you want to dig in deeper
 
@@ -205,7 +210,6 @@ When the project is compiled with maven, the Java classes for the data model are
 file under &lt;buld>&lt;plugins>. You can test it with “mvn clean compile” from the command line (current directory is project
 root) or using IntelliJ’s “Maven Project” tool button (seen on the right-hand side), under kafka-bookstore-tutorial, 
 Lifecycle, double click “clean”, double click “compile”.
-
 
 ## KSQL
 
@@ -333,92 +337,7 @@ The resulting Kafka topic could be used to drive fraud checks, automatically hol
     In der Strafkolonie | 59
     Kafka und Prag | 72
 
-
-
-
-## Kafka Streams
-
-A Kafka Streams application is a normal Java app, which makes
-it profit from Java's power and tool support. Most Kafka Streams applications read and write data to 
-Kafka topics, though external systems can also be involved (after all, you are in the Java world).
-
-While Kafka Streams is much more mature and powerful than KSQL, it works by chaining Lambda expressions, which
-requires experience programming and learning about its API.
-[TODO more explanation]
-
-Some current limitations of KSQL:
-
- - only join stream and table
- - cannot join by array item
- - cannot use external (e.g. Java) data structures and logic
- - cannot use avro keys
- - cannot use avro values that reference existing data types, or records of records, or arrays of records
- 
-
-### For each purchase, which books were bought?
-
-Purchase data:
-
-    5/17/18 8:09:42 PM UTC, 60a7ba13-af98-4e98-ba0f-d45e5e83923c, {"purchaseId": "60a7ba13-af98-4e98-ba0f-d45e5e83923c", "customerId": 52, "bookIds": ["2tTdnAEACAAJ", "zBskDwAAQBAJ", "FbPQPwAACAAJ", "kHnrswEACAAJ", "Fr7vCgAAQBAJ", "ym9rAgAAQBAJ", "0JYeJp1F99cC", "IkAzf9IRVpIC", "KdDqtq_CemwC", "beYRAAAAQBAJ", "d0RcAAAAMAAJ"], "packet": null, "totalAmount": 28901}
-
-Book data:
-
-    5/17/18 2:54:32 PM UTC, zOhEDgAAQBAJ, {"bookId": "zOhEDgAAQBAJ", "title": "Herz auf Eis", "authors": "Isabelle Autissier", "categories": "Fiction", "price": 2000}
-    5/17/18 2:54:32 PM UTC, 587mAgAAQBAJ, {"bookId": "587mAgAAQBAJ", "title": "Frühstück bei Tiffany", "authors": "Truman Capote", "categories": "Fiction", "price": 1450}
-    5/17/18 2:54:32 PM UTC, krU-DwAAQBAJ, {"bookId": "krU-DwAAQBAJ", "title": "Die Staatsräte", "authors": "Helmut Lethen", "categories": "History", "price": 2500}
-    5/17/18 2:54:32 PM UTC, 4mE6XwAACAAJ, {"bookId": "4mE6XwAACAAJ", "title": "Auf der Suche nach der verlorenen Zeit", "authors": "Marcel Proust", "categories": null, "price": 3250}
-    5/17/18 2:54:32 PM UTC, mqvzSAAACAAJ, {"bookId": "mqvzSAAACAAJ", "title": "Reise zum Mittelpunkt der Erde", "authors": "Jules Verne", "categories": null, "price": 4100}
-    5/17/18 2:54:32 PM UTC, eanFlQEACAAJ, {"bookId": "eanFlQEACAAJ", "title": "In Swanns Welt", "authors": "Marcel Proust", "categories": null, "price": 3650}
-    5/17/18 2:54:32 PM UTC, DHaQtAEACAAJ, {"bookId": "DHaQtAEACAAJ", "title": "Der mann ohne eigenschaften", "authors": "Robert Musil", "categories": null, "price": 3400}
-    5/17/18 2:54:32 PM UTC, 6yxDtQEACAAJ, {"bookId": "6yxDtQEACAAJ", "title": "Das Judentum in der Musik : Was ist Deutsch ; Modern", "authors": "Richard Wagner", "categories": "Antisemitism", "price": 3400}
-    5/17/18 2:54:32 PM UTC, XVn1jwEACAAJ, {"bookId": "XVn1jwEACAAJ", "title": "Der Prozess - Grossdruck", "authors": "Franz Kafka", "categories": null, "price": 3400}
-    5/17/18 2:54:32 PM UTC, h_xsAgAAQBAJ, {"bookId": "h_xsAgAAQBAJ", "title": "Reise ans Ende der Nacht", "authors": "Louis-Ferdinand Céline", "categories": "Fiction", "price": 1300}
-
-Can't be done in KSQL: would need to explode the nested bookIds object in order to do the join.
-
-    ksql> select p.purchaseid, b.title from purchase_stream p left join book b on p.bookid=b.bookid;
-     Line: 1, Col: 81 : Invalid join criteria (P.BOOKID = B.BOOKID). Key for P is not set correctly.
-
---> Do an example of Kafka Streams code here ?
-
-### Denormalise orders with customer, books, shipping, and payments
-
-Goal is to "sink connect" to mongo, so data can be queried by api client.
-
-Can't be done in KSQL currently as requires stream-stream join.
-
---> Do an example of Kafka Streams code here.
-
-Attempted KSQL:
-
-```
-CREATE TABLE orders_full WITH (value_format='avro') AS \
-
-SELECT purchase.purchaseId , payment.timestamp, payment.amount, shipping.timestamp, shipping.status FROM purchase left join payment ON payment.referenceNumber = purchase.purchaseId left join shipping ON shipping.packet = purchase.packet;
-
-io.confluent.ksql.parser.exception.ParseFailedException Caused by: java.lang.NullPointerException
-
-Breaking it down to find error cause:
-
-SELECT * FROM purchase left join payment ON payment.referenceNumber = purchase.purchaseId;
-
-java.lang.NullPointerException
-
-SELECT * FROM purchase left join shipping ON shipping.packet = purchase.packet;
-
-Unsupported Join. Only stream-table joins are supported, but was io.confluent.ksql.planner.plan.StructuredDataSourceNode@473cd960-io.confluent.ksql.planner.plan.StructuredDataSourceNode@7fdb958
-```
-
-### top 5 sold books by revenue (ideally join with payments to exclude unpaid orders + join with book to get author name)
-
-CREATE STREAM purchasest with (kafka_topic='purchase', VALUE_FORMAT='AVRO', key='purchaseId');
-
-SELECT bookIds, TOPK(totalAmount, 5) \
-FROM purchasest \
-WINDOW TUMBLING (SIZE 1 HOUR) \
-GROUP BY bookIds;
-
-
+**TODO** describe result?
 
 ### What the total value of payments, per 5 second window?
 
@@ -433,30 +352,95 @@ GROUP BY bookIds;
     2018-05-17 21:36:55 | 42051
     2018-05-17 21:37:00 | 10700
 
-### Which payments have been received for which purchases?
+### top 5 sold books by revenue (ideally join with payments to exclude unpaid orders + join with book to get author name)
 
-This is a stream-stream join, and not yet supported in KSQL
+CREATE STREAM purchasest with (kafka_topic='purchase', VALUE_FORMAT='AVRO', key='purchaseId');
 
---> Do an example of Kafka Streams code here?
-
-### Amount outstanding (i.e. amount ordered but not yet paid
-
-This is a stream-stream join, and not yet supported in KSQL
-
---> Do an example of Kafka Streams code here?
-
-### average time from ordered to paid, shipped, and received: where can we optimize?**
-
+SELECT bookIds, TOPK(totalAmount, 5) \
+FROM purchasest \
+WINDOW TUMBLING (SIZE 1 HOUR) \
+GROUP BY bookIds;
 
 ### Average ticket
     
-// TODO this is not average ticket
+**TODO** this is not average ticket, it should be average purchase.totalAmount, how about do it per region or so
 
 Persist as a table:
 
     CREATE TABLE VIEWS_PER_BOOK AS select b.title, count(*) as view_count from interaction i left join book b on i.Id = b.bookId where i.event='view' group by b.title;
 
-## Kafka Connect to stream data to Mongo and Elasticsearch
+
+
+
+### KSQL reference
+
+* https://www.confluent.io/product/ksql/
+* [KSQL docs][3]
+* [KSQL syntax reference][4]
+* [KSQL Quickstart tutorial][5]
+* [KSQL video tutorials][6]
+
+  [3]: https://docs.confluent.io/current/ksql/docs/index.html#ksql-home
+  [4]: https://docs.confluent.io/current/ksql/docs/syntax-reference.html
+  [5]: https://docs.confluent.io/current/quickstart/ce-quickstart.html
+  [6]: https://www.youtube.com/playlist?list=PLa7VYi0yPIH2eX8q3mPpZAn3qCS1eDX8W
+
+## Kafka Streams
+
+A Kafka Streams application is a normal Java app, which makes it profit from Java's power and tool support. 
+Most Kafka Streams applications both read and write data to Kafka topics, though external systems can also be involved, 
+after all, the data is in a Java application.
+
+While Kafka Streams is much more mature and powerful than KSQL, it does require a bit of experience with lambda 
+expressions and the Kafka Streams API.
+
+Some current limitations of KSQL:
+
+ - only join stream and table
+ - cannot join by array item
+ - cannot use external (e.g. Java) data structures and logic
+ - cannot use avro keys
+ - cannot use avro values that reference existing data types, or records of records, or arrays of records
+
+The goal is that you get a feeling about the basics of Kafka Streams and try out a few examples. 
+
+### Average shipping time
+
+In this example, we calculate the average time the shipping partner takes to deliver ur orders. 
+We work with one input topic "shipping", correlating the timestamp of the record with status "underway" with the one 
+with status "delivered".
+
+ * Open the file ch.ipt.handson.streams.ShipmentTimeStreamsApp
+ * Read the comments in the code
+ * Run the application (right click on the filename, select Run...)
+ * Watch the app output (logs) and what's written to the topic (shipping-times)
+ * You can stop the app when you are done to free resources
+
+### Outstanding Payments
+
+This Kafka Streams Application outputs in real time which purchases have not already been paid, together with the
+total amount to be received by the Kafka Bookstore.
+
+ * Open the file ch.ipt.handson.streams.PaymentsOutstandingStreamsApp
+ * Read the comments in the code
+ * Run the application (right click on the filename, select Run...)
+ * Watch the app output (logs) and what's written to the topic (shipping-times)
+ * You can stop the app when you are done to free resources
+
+
+### More information
+
+More information about Kafka Streams can be found at
+[Confluent](https://docs.confluent.io/current/streams/index.html), [Kafka](https://kafka.apache.org/documentation/streams/)
+and [here](https://kafka.apache.org/11/javadoc/org/apache/kafka/streams/package-summary.html) is some good old Javadoc.
+
+
+## Stream data out of Kafka and visualize it
+
+We'll use Kafka Connect again, but this time to stream data out of Kafka to Elastic Search. 
+Then, we'll see cool charts in Kibana.
+
+### Kafka Connect to Elastic Search
 
 Elasticsearch connector is installed with Confluent Open Source by default. Create a mapping template:
 
@@ -486,7 +470,6 @@ Create a connector that streams the enriched purchase/customer data to Elasticse
 Create a connector that streams the book view count to Elasticsearch
 
 
-
 **some reference**
     curl -X "POST" "http://localhost:8083/connectors/" \
          -H "Content-Type: application/json" \
@@ -508,21 +491,5 @@ Create a connector that streams the book view count to Elasticsearch
     }'
 
 
-## One more idea: viewed books by language
+### Visualize data in Kibana
 
-
- - add to schema (with default to be backwards compatible)
- - 
-
-## KSQL reference
-
-* https://www.confluent.io/product/ksql/
-* [KSQL docs][3]
-* [KSQL syntax reference][4]
-* [KSQL Quickstart tutorial][5]
-* [KSQL video tutorials][6]
-
-  [3]: https://docs.confluent.io/current/ksql/docs/index.html#ksql-home
-  [4]: https://docs.confluent.io/current/ksql/docs/syntax-reference.html
-  [5]: https://docs.confluent.io/current/quickstart/ce-quickstart.html
-  [6]: https://www.youtube.com/playlist?list=PLa7VYi0yPIH2eX8q3mPpZAn3qCS1eDX8W
