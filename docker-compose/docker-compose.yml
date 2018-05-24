@@ -14,9 +14,6 @@ services:
       - 8081-8083:8081-8083       # REST Proxy, Schema Registry, Kafka Connect ports
       - 9581-9585:9581-9585       # JMX Ports
       - 9092:9092                 # Kafka Broker
-    links:
-      - elasticsearch
-      - mysql
 
   # Runs the Kafka KSQL Server
   ksql-server:
@@ -38,6 +35,7 @@ services:
                        cub sr-ready kafka-cluster 8081 30 && \
                        echo Waiting a few seconds for topic creation to finish... && \
                        sleep 20 && \
+                       echo Starting KSQL... && \
                        /usr/bin/ksql-server-start /etc/ksql/ksql-server.properties'"
     environment:
       KSQL_CONFIG_DIR: "/etc/ksql"
@@ -55,13 +53,13 @@ services:
 #      - kafka
 #      - schema-registry
       - ksql-server
-      - kafka-cluster
+#      - kafka-cluster
     command: "perl -e 'while(1){ sleep 99999 }'"
     environment:
       KSQL_CONFIG_DIR: "/etc/ksql"
       KSQL_LOG4J_OPTS: "-Dlog4j.configuration=file:/etc/ksql/log4j-rolling.properties"
       STREAMS_BOOTSTRAP_SERVERS: kafka-cluster:9092
-      STREAMS_SCHEMA_REGISTRY_HOST: schema-registry
+      STREAMS_SCHEMA_REGISTRY_HOST: kafka-cluster
       STREAMS_SCHEMA_REGISTRY_PORT: 8081
     extra_hosts:
       - "moby:127.0.0.1"
