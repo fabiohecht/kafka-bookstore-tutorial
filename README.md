@@ -176,23 +176,22 @@ topics. Or go old-school with the command line:
 Using console-consumer inside a container with kafka:
 Kafka-avro-console-consumer [todo] or Landoop Kafka topics UI.
 
+### Start Java Mock Producer
 
+Let's start the Java Mock event producer. All of this can be done from IntelliJ's, which is contained in the VM.
 
-### Java Mock Producer
+Let's first compile the project with Maven. On the right-hand side of IntelliJ's window, under "Maven Projects", 
+"Lifecycle", double click "clean", then double click "package".
 
-Let's start the Java Mock event producer. All of this can be done from IntelliJ's GUI, but it's easier for me to 
-describe (and for you to copy and paste) by using the terminal.
+ * On the project navigator (left part of the screen), navigate to src/main/java/...producer. 
+ * Open the class MockProducer. Have a look at how we produce events to Kafka by calling producer.send().
+ * Run the MockProducer -- right click file name and "Run 'MockProducer.main()'.
+ * If all goes well, we are producing mock events to Kafka!
 
-Open up another terminal window and type:
+Like before, you can use the kafka-avro-console-consumer or Landoop's UI to see the events coming in your topics. 
 
-    cd IdeaProjects/kafka-bookstore-tutorial
-    mvn clean package
-
-[**TODO** is JDK properly configured in VM?]
-
-
-
-
+In real life, a Java Spring Boot microservice could expose an API that, when called by the Shipping partner or the Post,
+produces the event.
 
 ## KSQL
 
