@@ -2,7 +2,8 @@
 
 ## This tutorial
 
- 1. Use Case and Architecture
+ 1. Use Case
+ 2. System Architecture
  1. Running Platform
  1. Data Ingestion
  1. Stream data transformation with KSQL and Kafka Streams
@@ -10,7 +11,7 @@
 
 
 
-## Use Case and Architecture
+## Use Case
 
 The Kafka Bookstore is an online shop specialized in books by or about Franz Kafka.
 
@@ -37,21 +38,21 @@ The workflow is quite simple:
  1. Order is shipped (informed by shipping partner)
  1. Shipment is delivered or lost (informed by shipping partner)
 
-### Architecture
+**TODO** describe use case for transforming and outputting events
+
+## Architecture
+
+As seen in the diagram below, we will be using Kafka as a data streaming platform. There are source systems that can
+produce events (i.e. write data to Kafka) and target sytems that will consume events. We will also use Kafka to 
+transform and aggregate events.
 
 [TODO diagram]
 
+### Source systems
 
-#### Source systems
+The following systems  
 
-For more information about the data schemas used, have a look at src/main/resources/avro/Schemas.avsc. These are defined
-in Avro format, which is fairly human-readable (Json). The spec can be found at http://avro.apache.org/docs/1.8.2/spec.html.
-When the project is compiled with maven, the Java classes for the data model are generated, as specified in the pom.xml
-file under &lt;buld>&lt;plugins>. You can test it with “mvn clean compile” from the command line (current directory is project
-root) or using IntelliJ’s “Maven Project” tool button (seen on the right-hand side), under kafka-bookstore-tutorial, 
-Lifecycle, double click “clean”, double click “compile”.
-
-##### CRM and Inventory Management System
+#### CRM and Inventory Management System
 
 We assume there is a CRM and Inventory Management System system that holds information regarding customers and products.
 The systems that manage them use MySQL to keep their data. 
@@ -59,23 +60,23 @@ All the needed information can be found in the “customer” and “product” 
 As part of this tutorial, we'll use Kafka Connect and a CDC (change data capture) tool to stream all updates to those 
 tables in real time to Kafka.
 
-##### Mocked Components
+#### Mocked Components
 
 The following components do not actually exist. The events that would be produced by them are mocked by a Java producer.
 
-###### Microservices logs
+##### Microservices logs
 
 When a user views a product or adds an item in the shopping cart, an event is produced to the topic “interaction”.
 When an order is placed, then the event is published to the topic “purchase”. The field “packet” is null at first, then
 updated as soon as the order is shipped. But the order isn’t shipped before it’s paid for!
 
-###### Payment Partner
+##### Payment Partner
 
 The Payment Notification microservice knows when customers have paid for an order (it calls an API, is called by a 
 webhook, triggered by a file transfer, whatever), and produces a message in the “payment” topic when it happens.
 For simplicity, all orders are paid in full.
 
-###### Shipping Partner
+##### Shipping Partner
 
 Once the order is paid for, it is shipped. First, the “purchase” topic is updated with the packet id.
 The Shipping Notification microservice is triggered by the shipping company (let’s say an API is called) and updates the
@@ -181,7 +182,6 @@ Press CTRL-C to exit.
 
 ### Start Java Mock Producer
 
-
 Let's start the Java Mock event producer. All of this can be done from IntelliJ's, which is contained in the VM.
 Let's first compile the project with Maven. On the right-hand side of IntelliJ's window, under "Maven Projects", 
 "Lifecycle", double click "clean", then double click "package".
@@ -195,6 +195,17 @@ Like before, you can use the kafka-avro-console-consumer or Landoop's UI to see 
 
 In real life, a Java Spring Boot microservice could expose an API that, when called by the Shipping partner or the Post,
 produces the event.
+
+
+#### If you want to dig in deeper
+
+For more information about the data schemas used, have a look at src/main/resources/avro/Schemas.avsc. These are defined
+in Avro format, which is fairly human-readable (Json). The spec can be found at http://avro.apache.org/docs/1.8.2/spec.html.
+When the project is compiled with maven, the Java classes for the data model are generated, as specified in the pom.xml
+file under &lt;buld>&lt;plugins>. You can test it with “mvn clean compile” from the command line (current directory is project
+root) or using IntelliJ’s “Maven Project” tool button (seen on the right-hand side), under kafka-bookstore-tutorial, 
+Lifecycle, double click “clean”, double click “compile”.
+
 
 ## KSQL
 
