@@ -1,10 +1,24 @@
 # ipt-Confluent Workshop :: Kafka Bookstore Tutorial
 
+
+
+## This tutorial
+
+ 1. Use Case and Architecture
+ 1. Running Platform
+ 1. Data ingestion with Kafka Connect
+ 1. Stream data transformation with KSQL and Kafka Streams
+ 1. Stream data out of Kafka with Kafka Connect 
+
+
+
+## Use Case and Architecture
+
 The Kafka Bookstore is an online shop specialized in books by or about Franz Kafka.
 
 It uses Apache Kafka as its messaging platform, due to its singular characteristics:
 
- - Real time data streaming
+ - Data streaming in real time, supports also batching
  - Decouples microservices with event driven architecture
  - Integrated storage, which allows messages to be reprocessed in the future
  - Wide range of connectors to import and export data into and out of it (Kafka Connect)
@@ -14,16 +28,21 @@ It uses Apache Kafka as its messaging platform, due to its singular characterist
  - Excellent tools and support from Confluent ;)
  - It’s awesome!
 
-Since a couple of weeks now, a minimum viable product (MVP) has been released and it’s attracting a lot of attention. 
-The workflow is quite simple:
+Since a couple of weeks now, a minimum viable product (MVP) has been released and it’s attracting a lot of attention. The workflow is quite simple:
 
  1. Customer signs up/logs in
  1. Customer browses products
  1. Customer adds products to cart
- 1. Customer makes a purchase
+ 1. Customer places an order
  1. Customer pays (informed by third-party payment partner)
  1. Order is shipped (informed by shipping partner)
  1. Shipment is delivered or lost (informed by shipping partner)
+
+### Architecture
+
+[TODO from Google Doc]
+
+
 
 ## Running Platform
 
@@ -51,18 +70,41 @@ If you have an outdated laptop (i.e. with less than 16 GB RAM), please have a lo
 In src/main/docker-compose:
 
     docker-compose up -d
+    
+To see which containers are running and their statuses:
+
     docker ps
-    docker logs [name]
+
+To see the logs of each container
+
+    docker logs [image-name]
+
+On my machine, the elasticsearch image could not start, I had to
+
+    sudo sysctl -w vm.max_map_count=262144
+
+Kafka command-line tools:
+
+    TODO
+
+Web UIs running:
+   
+ - Landoop UI: http://localhost:3030/
+ - Link to Schema Registry UI, Kafka Topics UI, Connect 
+ - Kibana web UI: http://localhost:5601
+
+
+
 
 ## Sourcing data
 
 TODO: Document how to get the java app running
 
-TODO: Put the customer and book data in mysql/postgres and set up debezium to CDC it across (can then demo realtime changes of data in DB reflecting in Kafka + KSQL processing)
+TODO: Put the customer and book data in mysql/postgres (DONE) and set up debezium to CDC it across (can then demo realtime changes of data in DB reflecting in Kafka + KSQL processing)
 
 ## KSQL
 
-KSQL is a new product from Confluent released in March 2018... [TODO shortly describe KSQL]
+KSQL is a new product from Confluent officially released in March 2018... [TODO shortly describe KSQL]
 
 Launch the KSQL cli:
 
@@ -195,9 +237,12 @@ The resulting Kafka topic could be used to drive fraud checks, automatically hol
 
 ## Kafka Streams
 
-Kafka Streams is much more mature and powerful than KSQL. A Kafka Streams application is a normal Java app, which makes
+A Kafka Streams application is a normal Java app, which makes
 it profit from Java's power and tool support. Most Kafka Streams applications read and write data to 
 Kafka topics, though external systems can also be involved (after all, you are in the Java world).
+
+While Kafka Streams is much more mature and powerful than KSQL, it works by chaining Lambda expressions, which
+requires experience programming and learning about its API.
 [TODO more explanation]
 
 Some current limitations of KSQL:
@@ -207,7 +252,6 @@ Some current limitations of KSQL:
  - cannot use external (e.g. Java) data structures and logic
  - cannot use avro keys
  - cannot use avro values that reference existing data types, or records of records, or arrays of records
- - and more
  
 
 ### For each purchase, which books were bought?
