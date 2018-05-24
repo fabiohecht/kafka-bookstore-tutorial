@@ -1,12 +1,10 @@
 # ipt-Confluent Workshop :: Kafka Bookstore Tutorial
 
-
-
 ## This tutorial
 
  1. Use Case and Architecture
  1. Running Platform
- 1. Data ingestion with Kafka Connect
+ 1. Data Ingestion
  1. Stream data transformation with KSQL and Kafka Streams
  1. Stream data out of Kafka with Kafka Connect 
 
@@ -28,7 +26,8 @@ It uses Apache Kafka as its messaging platform, due to its singular characterist
  - Excellent tools and support from Confluent ;)
  - It’s awesome!
 
-Since a couple of weeks now, a minimum viable product (MVP) has been released and it’s attracting a lot of attention. The workflow is quite simple:
+Since a couple of weeks now, a minimum viable product (MVP) has been released and it’s attracting a lot of attention. 
+The workflow is quite simple:
 
  1. Customer signs up/logs in
  1. Customer browses products
@@ -40,7 +39,47 @@ Since a couple of weeks now, a minimum viable product (MVP) has been released an
 
 ### Architecture
 
-[TODO from Google Doc]
+[TODO diagram]
+
+
+#### Source systems
+
+For more information about the data schemas used, have a look at src/main/resources/avro/Schemas.avsc. These are defined
+in Avro format, which is fairly human-readable. The spec can be found at http://avro.apache.org/docs/1.8.2/spec.html.
+When the project is compiled with maven, the Java classes for the data model are generated, as specified in the pom.xml
+file under <buld><plugins>. You can test it with “mvn clean compile” from the command line (current directory is project
+root) or using IntelliJ’s “Maven Project” tool button (seen on the right-hand side), under kafka-bookstore-tutorial, 
+Lifecycle, double click “clean”, double click “compile”.
+
+##### CRM and Inventory Management System
+
+We assume there is a CRM and Inventory Management System system that holds information regarding customers and products.
+The systems that manage them use MySQL to keep their data. 
+All the needed information can be found in the “customer” and “product” tables.
+As part of this tutorial, we'll use Kafka Connect and a CDC (change data capture) tool to stream all updates to those 
+tables in real time to Kafka.
+
+##### Mocked Components
+
+The following components do not actually exist. The events that would be produced by them are mocked by a Java producer.
+
+###### Microservices logs
+
+When a user views a product or adds an item in the shopping cart, an event is produced to the topic “interaction”.
+When an order is placed, then the event is published to the topic “purchase”. The field “packet” is null at first, then
+updated as soon as the order is shipped. But the order isn’t shipped before it’s paid for!
+
+###### Payment Partner
+
+The Payment Notification microservice knows when customers have paid for an order (it calls an API, is called by a 
+webhook, triggered by a file transfer, whatever), and produces a message in the “payment” topic when it happens.
+For simplicity, all orders are paid in full.
+
+###### Shipping Partner
+
+Once the order is paid for, it is shipped. First, the “purchase” topic is updated with the packet id.
+The Shipping Notification microservice is triggered by the shipping company (let’s say an API is called) and updates the
+topic “shipping” with statuses “underway”, “delivered”, or “lost”.
 
 
 
@@ -48,38 +87,47 @@ Since a couple of weeks now, a minimum viable product (MVP) has been released an
 
 Your choice: Local docker images or use VirtualBox image.
 
+If you have an outdated laptop (i.e. with less than 16 GB RAM), please have a look 
+[here](https://ipt.jiveon.com/docs/DOC-2169).
+
+### Prerequisites
+
 ### Local
 
-* Docker and Docker Compose must be installed
-    * Mac OS: [https://docs.docker.com/docker-for-mac/install/]
-    * Linux: You don't need instructions.
-    * Other OSs: [https://docs.docker.com/engine/installation/]
-* Git: https://git-scm.com/downloads
+Please install:
 
-If you have an outdated laptop (i.e. with less than 16 GB RAM), please have a look [here](https://ipt.jiveon.com/docs/DOC-2169).
+* Docker and Docker Compose
+* Git, Maven, and a Java IDE
+* JDK 8
 
-## Prerequisites
+Then clone this repository: https://github.com/fabiohecht/kafka-bookstore-tutorial.git
 
-- Docker
-    - `macOS <https://docs.docker.com/docker-for-mac/install/>`__
-    - `All platforms <https://docs.docker.com/engine/installation/>`__
-- `Git <>`__
+### VirtualBox image
 
+Please install Virtual Box and get the image from a USB stick (ask Fabio).
+It already has Docker and all the stuff in it.
+
+### Get the platform started   
+
+Let's first make sure you have all last-minute changes. Open a terminal and type:
+
+    cd IdeaProjects/kafka-bookstore-tutorial
+    git pull
     
+Now let's start all Docker containers. Open a terminal and type:
 
-In src/main/docker-compose:
-
+    cd docker-compose
     docker-compose up -d
-    
+
 To see which containers are running and their statuses:
 
-    docker ps
+    docker-compose ps
 
-To see the logs of each container
+It may take like a minute until all is running. You can see the logs of each container by typing:
 
-    docker logs [image-name]
+    docker-compose logs [image-name]
 
-On my machine, the elasticsearch image could not start, I had to
+On my machine, the elasticsearch image could not start, I had to do a:
 
     sudo sysctl -w vm.max_map_count=262144
 
@@ -87,30 +135,69 @@ Kafka command-line tools:
 
     TODO
 
-Web UIs running:
-   
- - Landoop UI: http://localhost:3030/
- - Link to Schema Registry UI, Kafka Topics UI, Connect 
+You should be able to use a browser and see a few web UIs running:
+      
+ - Confluent Control Center: http://localhost:9021
+ - Landoop Kafka Topics UI: http://localhost:8000
+ - Landoop Confluent Schema Registry UI: http://localhost:8001
+ - Landoop Kafka Connect UI: http://localhost:8003
  - Kibana web UI: http://localhost:5601
 
+The Web UIs are useful to visualize some information. There are also command line tools and APIs that are more powerful.
+
+## Data Ingestion
+
+We will use Kafka Connect to stream two MySQL tables to Kafka topics, and start a Java application that
+mocks events.
+
+### MySQL Kafka Connect
+
+A MySQL Server was started by Docker Compose and preloaded with mock data. You can check it out with:
+
+    docker-compose exec mysql mysql -p kafka-bookstore
+    Enter password: secret
+
+[**TODO** copy paste]
+
+When you are done, exit with crtl+D as usual.
+
+
+**TODO** set up debezium to CDC it across (can then demo realtime changes of data in DB reflecting in Kafka + KSQL processing)
+
+**TODO** Kafka Connect config.
+
+
+Check that imported data looks ok. You can use the Landoop Topics UI and look at the data in the "book" and "customer"
+topics. Or go old-school with the command line:
+
+    
+
+Using console-consumer inside a container with kafka:
+Kafka-avro-console-consumer [todo] or Landoop Kafka topics UI.
 
 
 
-## Sourcing data
+### Java Mock Producer
 
-TODO: Document how to get the java app running
+Let's start the Java Mock event producer. All of this can be done from IntelliJ's GUI, but it's easier for me to 
+describe (and for you to copy and paste) by using the terminal.
 
-TODO: Put the customer and book data in mysql/postgres (DONE) and set up debezium to CDC it across (can then demo realtime changes of data in DB reflecting in Kafka + KSQL processing)
+Open up another terminal window and type:
+
+    cd IdeaProjects/kafka-bookstore-tutorial
+    mvn clean package
+
+[**TODO** is JDK properly configured in VM?]
+
+
+
+
 
 ## KSQL
 
 KSQL is a new product from Confluent officially released in March 2018... [TODO shortly describe KSQL]
 
 Launch the KSQL cli:
-
-    docker exec -it dockercompose_ksql-cli_1 ksql http://ksql-server:8088
-
-or
 
     docker-compose exec ksql-cli ksql http://ksql-server:8088
 
