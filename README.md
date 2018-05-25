@@ -231,7 +231,6 @@ To configure Debezium, run the follow call to the Kafka Connect REST endpoint:
                 "database.password": "dbz",
                 "database.server.id": "42",
                 "database.server.name": "asgard",
-                "table.whitelist": "demo.customers",
                 "database.history.kafka.bootstrap.servers": "kafka:29092",
                 "database.history.kafka.topic": "dbhistory.demo" ,
                 "include.schema.changes": "true",
@@ -245,7 +244,7 @@ To configure Debezium, run the follow call to the Kafka Connect REST endpoint:
                 }
         }'
 
-(Full payload) : 
+(Full payload) :
 
     curl -i -X POST -H "Accept:application/json" \
         -H  "Content-Type:application/json" http://localhost:8083/connectors/ \
@@ -261,7 +260,7 @@ To configure Debezium, run the follow call to the Kafka Connect REST endpoint:
                 "database.server.name": "asgard",
                 "table.whitelist": "demo.customers",
                 "database.history.kafka.bootstrap.servers": "kafka:29092",
-                "database.history.kafka.topic": "dbhistory.demo" ,
+                "database.history.kafka.topic": "dbhistory.demo.raw" ,
                 "include.schema.changes": "true",
                 "transforms": "addTopicSuffix",
                 "transforms.addTopicSuffix.type":"org.apache.kafka.connect.transforms.RegexRouter",
