@@ -93,7 +93,7 @@ Schema Registry instance. It is where all Kafka topics are stored together with 
 ### Data Transformation
 
 We will use both KSQL and Kafka Streams to consume streaming data from Kafka Topics, transform and aggregate it, and
-write (produce) them to other Kafka topics.
+write (produce) it to other Kafka topics.
 
 ### Web UIs
 
@@ -192,7 +192,7 @@ For example, the kafka-connect image.
 For example, to list all existing topics, you can use the Confluent Control Center, the Landoop Topics UI, 
 or via command line:
 
-    docker-compose exec kafka-connect kafka-topics --list --zookeeper zookeeper:2181
+    docker-compose exec kafka-connect-cp kafka-topics --list --zookeeper zookeeper:2181
 
 Only system topics are listed for the moment, but soon enough we will create our own topics.
 
@@ -210,14 +210,18 @@ A MySQL Server was started by Docker Compose and preloaded with mock data. You c
 From the MySQL prompt, explore the two tables:
 
     SHOW TABLES;
-    SELECT * FROM BOOK;
-    SELECT * FROM CUSTOMERS;
+    SELECT * FROM book;
+    SELECT * FROM customers;
 
 When you are done, exit with ctrl+D.
 
 ### Stream MySQL changes into Kafka
 
-The Docker Compose set of containers includes one for Kafka Connect with the Confluent Platform connectors present (covering JDBC, HDFS, S3, and Elasticsearch), and another for Kafka Connect with the Debezium MySQL CDC connector.
+The Docker Compose set of containers includes one for Kafka Connect with the Confluent Platform connectors present 
+(covering JDBC, HDFS, S3, and Elasticsearch), and another for Kafka Connect with the Debezium MySQL CDC connector.
+
+Kafka Connect jobs are configured via API calls. There are also GUIs layers available. We'll use curl to call the APIs
+directly.
 
 To configure Debezium, run the follow call to the Kafka Connect REST endpoint:
 
@@ -274,14 +278,20 @@ To configure Debezium, run the follow call to the Kafka Connect REST endpoint:
                 }
         }'
 
-Check that imported data looks ok. You can use the Landoop Topics UI and look at the data in the "book" and "customer"
-topics. Or go old-school with the command line (we use the kafka-connect container just because it has the command
+Check that imported data looks ok. Via command line we use the kafka-connect-cp container just because it has the command
 line tools installed):
 
-    docker-compose exec kafka-connect kafka-avro-console-consumer --bootstrap-server kafka:29092 --topic asgard.inventory.book --from-beginning --property schema.registry.url=http://schema-registry:8081
-
+    docker-compose exec kafka-connect-cp kafka-avro-console-consumer --bootstrap-server kafka:29092 --topic asgard.inventory.book --from-beginning --property schema.registry.url=http://schema-registry:8081
 
 Press CTRL-C to exit.
+
+Note: Due to time constraints, we are using two instances of Connect in this tutorial, one with the Debezium connector for 
+ingestion and one with Elasticsearch connector for output. In real life you could use both connectors in the same connect
+cluster. Thus, we configured two instances of the Landoop Connect UI:
+
+ - http://localhost:8003 manages the instance with Confluent connectors (e.g. Elasticsearch)
+ - http://localhost:8004 manages the instance with Debezium connectors
+
 
 ### Start Java Mock Producer
 
@@ -519,7 +529,7 @@ Elasticsearch connector is installed with Confluent Open Source by default. Crea
 
 Create a connector that streams the enriched purchase/customer data to Elasticsearch:
 
-    curl -X "POST" "http://localhost:8083/connectors/" \
+    curl -X "POST" "http://localhost:18083/connectors/" \
          -H "Content-Type: application/json" \
          -d '{
       "name": "es_sink_PURCHASE_ENRICHED",
@@ -538,50 +548,13 @@ Create a connector that streams the enriched purchase/customer data to Elasticse
       }
     }'
 
-Create a connector that streams the book view count to Elasticsearch
+Create a connector that streams the Outstanding Payments stream to Elasticsearch
 
 
-**some reference**
-
-    curl -X "POST" "http://localhost:8083/connectors/" \
+    curl -X "POST" "http://localhost:18083/connectors/" \
          -H "Content-Type: application/json" \
          -d '{
-      "name": "es_sink_VIEWS_PER_BOOK",
-      "config": {
-        "topics": "VIEWS_PER_BOOK",
-        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-        "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
-        "key.ignore": "true",
-        "schema.ignore": "false",
-        "type.name": "type.name=kafkaconnect",
-        "topic.index.map": "VIEWS_PER_BOOK:views_per_book",
-        "connection.url": "http://localhost:9200",
-        "transforms": "ExtractTimestamp",
-        "transforms.ExtractTimestamp.type": "org.apache.kafka.connect.transforms.InsertField$Value",
-        "transforms.ExtractTimestamp.timestamp.field" : "EXTRACT_TS"
-      }
-    }'
-
-
-### Visualize data in Kibana
-
-**TODO**
-
-
-
-
-
-
-
----
-
-
-Fabio's tests:
-
-    curl -X "POST" "http://localhost:8083/connectors/" \
-         -H "Content-Type: application/json" \
-         -d '{
-      "name": "eoa2",
+      "name": "outstanding_payments_elastic",
       "config":  {
                       "topics": "outstanding-amount",
                       "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
@@ -600,12 +573,15 @@ Fabio's tests:
                     }
     }'
     
+You can use the Kafka Connect API or Landoop to check the status of the connectors, for example with:
+    
+    http://localhost:18083/connectors  
+    http://localhost:18083/connectors/outstanding_payments_elastic/tasks/0/status
 
-    
-    
-    
-    
-    http://localhost:8083/connectors
-    
-    http://localhost:8083/connectors/eoa/tasks/0/status
-    
+
+### Visualize data in Kibana
+
+Check in Kibana that the data is coming in: http://localhost:5601. Hint: Create an index on outstanding-amount.
+The details are left as an exercise to the reader ;)
+
+Now you are free to play around in Kibana, write new transformations, or stream new data to Elastic.
