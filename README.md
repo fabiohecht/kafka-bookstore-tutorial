@@ -344,13 +344,16 @@ to see a live feed of messages being added to the topic (note the ommission of `
     CREATE STREAM PURCHASE_STREAM with (kafka_topic='purchase', VALUE_FORMAT='AVRO');
     CREATE STREAM PAYMENT_STREAM with (kafka_topic='payment', VALUE_FORMAT='AVRO');
 
+    CREATE STREAM CUSTOMER_SRC with (kafka_topic='asgard.inventory.customers', VALUE_FORMAT='AVRO');
+    CREATE STREAM CUSTOMER_REKEY AS SELECT * FROM CUSTOMER_SRC PARTITION BY ID;
+    CREATE TABLE CUSTOMER with (kafka_topic='CUSTOMER_REKEY', VALUE_FORMAT='AVRO', KEY='ID');
+
 ### Explore objects
 
     describe interaction;
 
     SET 'auto.offset.reset' = 'earliest';
     SELECT * FROM INTERACTION LIMIT 5;
-
 
 ### How many views have there been per category, per 30 second window?
 
@@ -538,7 +541,7 @@ Create a connector that streams the enriched purchase/customer data to Elasticse
         "schema.ignore": "false",
         "type.name": "type.name=kafkaconnect",
         "topic.index.map": "PURCHASE_ENRICHED:purchase_enriched",
-        "connection.url": "http://localhost:9200",
+        "connection.url": "http://elasticsearch:9200",
         "transforms": "ExtractTimestamp",
         "transforms.ExtractTimestamp.type": "org.apache.kafka.connect.transforms.InsertField$Value",
         "transforms.ExtractTimestamp.timestamp.field" : "EXTRACT_TS"
