@@ -258,7 +258,6 @@ To configure Debezium, run the follow call to the Kafka Connect REST endpoint:
                 "database.password": "dbz",
                 "database.server.id": "44",
                 "database.server.name": "asgard",
-                "table.whitelist": "demo.customers",
                 "database.history.kafka.bootstrap.servers": "kafka:29092",
                 "database.history.kafka.topic": "dbhistory.demo.raw" ,
                 "include.schema.changes": "true",
