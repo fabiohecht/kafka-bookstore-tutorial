@@ -58,7 +58,7 @@ The following systems will ingest data into Kafka.
 
 We assume there is a CRM and Inventory Management System system that holds information regarding customers and products.
 The systems that manage them use MySQL to keep their data.
-All the needed information can be found in the “customer” and “product” tables.
+All the needed information can be found in the “customer” and “book” tables.
 As part of this tutorial, we'll use Kafka Connect and a CDC (change data capture) tool to stream all updates to those
 tables in real time to Kafka.
 
@@ -576,27 +576,36 @@ Create a connector that streams the book view count to Elasticsearch
 ---
 
 
-Create elasticsearch index first?
-
-
 Fabio's tests:
 
     curl -X "POST" "http://localhost:8083/connectors/" \
          -H "Content-Type: application/json" \
          -d '{
-      "name": "es_sink_book",
-      "config": {
-        "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
-        "topics": "book",
-        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-        "value.converter": "io.confluent.connect.avro.AvroConverter",
-        "key.ignore": "true",
+      "name": "eoa2",
+      "config":  {
+                      "topics": "outstanding-amount",
+                      "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+                      "connection.url": "http://elasticsearch:9200",
+                      "tasks.max": "1",
+                      "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+                      "value.converter": "io.confluent.connect.avro.AvroConverter",
+                      "value.converter.schema.registry.url":"http://schema-registry:8081",
+                      "type.name": "kafkaconnect",
+                              "key.ignore": "true",
         "schema.ignore": "false",
-        "type.name": "type.name=kafkaconnect",
-        "topic.index.map": "book:book",
-        "connection.url": "http://localhost:9200",
         "transforms": "ExtractTimestamp",
         "transforms.ExtractTimestamp.type": "org.apache.kafka.connect.transforms.InsertField$Value",
         "transforms.ExtractTimestamp.timestamp.field" : "EXTRACT_TS"
-      }
+
+                    }
     }'
+    
+
+    
+    
+    
+    
+    http://localhost:8083/connectors
+    
+    http://localhost:8083/connectors/eoa/tasks/0/status
+    
