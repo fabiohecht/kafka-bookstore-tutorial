@@ -1,5 +1,12 @@
-CREATE DATABASE  IF NOT EXISTS `kafka-bookstore` /*!40100 DEFAULT CHARACTER SET utf8 */;
-USE `kafka-bookstore`;
+USE `inventory`;
+
+-- Remove the existing Debezium-loaded tables, as it will be confusing
+drop table addresses;
+drop table orders;
+drop table products_on_hand;
+drop table products;
+drop table customers;
+
 -- MySQL dump 10.13  Distrib 5.7.22, for Linux (x86_64)
 --
 -- Host: localhost    Database: kafka-bookstore

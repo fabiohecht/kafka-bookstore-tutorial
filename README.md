@@ -30,7 +30,7 @@ Coincidentally, it uses Apache Kafka as its messaging platform, due to its singu
  - Excellent tools and support from Confluent ;)
  - It’s awesome!
 
-Since a couple of weeks now, a minimum viable product (MVP) has been released and it’s attracting a lot of attention. 
+Since a couple of weeks now, a minimum viable product (MVP) has been released and it’s attracting a lot of attention.
 The workflow is the following:
 
  1. Customer signs up/logs in
@@ -45,7 +45,7 @@ Kafka is used as a data streaming platform, to decouple microservices and transf
 
 ## Architecture
 
-As seen in the diagram below, there are source systems that produce events (i.e. write data to Kafka) and target systems 
+As seen in the diagram below, there are source systems that produce events (i.e. write data to Kafka) and target systems
 that will consume events. We will also use Kafka to transform and aggregate events.
 
 ![alt text](kafka-bookstore-architecture.png "Kafka Bookstore Tutorial Architecure")
@@ -57,9 +57,9 @@ The following systems will ingest data into Kafka.
 #### CRM and Inventory Management System
 
 We assume there is a CRM and Inventory Management System system that holds information regarding customers and products.
-The systems that manage them use MySQL to keep their data. 
+The systems that manage them use MySQL to keep their data.
 All the needed information can be found in the “customer” and “product” tables.
-As part of this tutorial, we'll use Kafka Connect and a CDC (change data capture) tool to stream all updates to those 
+As part of this tutorial, we'll use Kafka Connect and a CDC (change data capture) tool to stream all updates to those
 tables in real time to Kafka.
 
 #### Mocked Components
@@ -74,25 +74,25 @@ updated as soon as the order is shipped. But the order isn’t shipped before it
 
 ##### Payment API Endpoint
 
-The Payment API Endpoint microservice knows when customers have paid for an order. Let's say it calls an API, or it is 
-called by a webhook, triggered by a file transfer, whatever. The point is that it produces a message in the “payment” 
+The Payment API Endpoint microservice knows when customers have paid for an order. Let's say it calls an API, or it is
+called by a webhook, triggered by a file transfer, whatever. The point is that it produces a message in the “payment”
 topic when it happens. For simplicity, all orders are paid in full.
 
 ##### Shipping Partner
 
-Once the order is paid for, it is shipped. Once the Kafka Bookstore ships an item, it updates the “purchase” topic 
-with the packet id informed by the Shipping partner. Then, the Shipping Partner microservice is triggered by the 
+Once the order is paid for, it is shipped. Once the Kafka Bookstore ships an item, it updates the “purchase” topic
+with the packet id informed by the Shipping partner. Then, the Shipping Partner microservice is triggered by the
 shipping company (let’s say at calls ans API) and produces a
 message in the topic “shipping” with the status “underway”, “delivered”, or “lost”.
 
 ### Kafka Cluster
 
-The Kafka Cluster groups all basic Kafka infrastructure. It contain one Zookeeper instance, one Kafka Broker, and one 
+The Kafka Cluster groups all basic Kafka infrastructure. It contain one Zookeeper instance, one Kafka Broker, and one
 Schema Registry instance. It is where all Kafka topics are stored together with their metadata (schemas).
 
 ### Data Transformation
 
-We will use both KSQL and Kafka Streams to consume streaming data from Kafka Topics, transform and aggregate it, and 
+We will use both KSQL and Kafka Streams to consume streaming data from Kafka Topics, transform and aggregate it, and
 write (produce) them to other Kafka topics.
 
 ### Web UIs
@@ -105,8 +105,8 @@ available:
 
 ### Rest Proxy
 
-Exposes a REST interface that can be used by streaming clients that do not dispose of a native client library. 
-We won't use it for this demo. 
+Exposes a REST interface that can be used by streaming clients that do not dispose of a native client library.
+We won't use it for this demo.
 
 ### Elasticsearch and Kibana
 
@@ -127,7 +127,7 @@ The following Kafka Topics will be used in this tutorial:
 
 Your choice: Local docker images or use VirtualBox image.
 
-If you have an outdated laptop (i.e. with less than 16 GB RAM), please have a look 
+If you have an outdated laptop (i.e. with less than 16 GB RAM), please have a look
 [here](https://ipt.jiveon.com/docs/DOC-2169).
 
 ### Prerequisites
@@ -147,13 +147,13 @@ Then clone this repository: https://github.com/fabiohecht/kafka-bookstore-tutori
 Please install Virtual Box and get the image from a USB stick (ask Fabio).
 It's large, but it already has all the stuff in it.
 
-### Get the platform started   
+### Get the platform started
 
 Let's first make sure you have all last-minute changes. Open a terminal and type:
 
     cd IdeaProjects/kafka-bookstore-tutorial
     git pull
-    
+
 Now let's start all Docker containers. Open a terminal and type:
 
     cd docker-compose
@@ -201,39 +201,87 @@ Only system topics are listed for the moment, but soon enough we will create our
 We will use Kafka Connect to stream two MySQL tables to Kafka topics, and start a Java application that
 mocks events.
 
-### MySQL Kafka Connect
+### MySQL
 
 A MySQL Server was started by Docker Compose and preloaded with mock data. You can check it out with:
 
-    docker-compose exec mysql mysql -p kafka-bookstore
-    Enter password: secret
+    docker-compose exec mysql bash -c 'mysql -u $MYSQL_USER -p$MYSQL_PASSWORD inventory'
 
-    mysql> show tables;
-    +---------------------------+
-    | Tables_in_kafka-bookstore |
-    +---------------------------+
-    | book                      |
-    | customers                 |
-    +---------------------------+
-    2 rows in set (0.00 sec)
+From the MySQL prompt, explore the two tables:
 
-When you are done, exit with crtl+D.
+    SHOW TABLES;
+    SELECT * FROM BOOK;
+    SELECT * FROM CUSTOMERS;
 
-**TODO** set up debezium to CDC it across (can then demo realtime changes of data in DB reflecting in Kafka + KSQL processing)
+When you are done, exit with ctrl+D.
 
-**TODO** Kafka Connect config.
+### Stream MySQL changes into Kafka
+
+The Docker Compose set of containers includes one for Kafka Connect with the Confluent Platform connectors present (covering JDBC, HDFS, S3, and Elasticsearch), and another for Kafka Connect with the Debezium MySQL CDC connector.
+
+To configure Debezium, run the follow call to the Kafka Connect REST endpoint:
+
+(Flattened schema) :
+
+    curl -i -X POST -H "Accept:application/json" \
+        -H  "Content-Type:application/json" http://localhost:8083/connectors/ \
+        -d '{
+          "name": "mysql-source-inventory",
+          "config": {
+                "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+                "database.hostname": "mysql",
+                "database.port": "3306",
+                "database.user": "debezium",
+                "database.password": "dbz",
+                "database.server.id": "42",
+                "database.server.name": "asgard",
+                "table.whitelist": "demo.customers",
+                "database.history.kafka.bootstrap.servers": "kafka:29092",
+                "database.history.kafka.topic": "dbhistory.demo" ,
+                "include.schema.changes": "true",
+                "transforms": "unwrap,InsertTopic,InsertSourceDetails",
+                "transforms.unwrap.type": "io.debezium.transforms.UnwrapFromEnvelope",
+                "transforms.InsertTopic.type":"org.apache.kafka.connect.transforms.InsertField$Value",
+                "transforms.InsertTopic.topic.field":"messagetopic",
+                "transforms.InsertSourceDetails.type":"org.apache.kafka.connect.transforms.InsertField$Value",
+                "transforms.InsertSourceDetails.static.field":"messagesource",
+                "transforms.InsertSourceDetails.static.value":"Debezium CDC from MySQL on asgard"
+                }
+        }'
+
+(Full payload) : 
+
+    curl -i -X POST -H "Accept:application/json" \
+        -H  "Content-Type:application/json" http://localhost:8083/connectors/ \
+        -d '{
+          "name": "mysql-source-inventory-raw",
+          "config": {
+                "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+                "database.hostname": "mysql",
+                "database.port": "3306",
+                "database.user": "debezium",
+                "database.password": "dbz",
+                "database.server.id": "44",
+                "database.server.name": "asgard",
+                "table.whitelist": "demo.customers",
+                "database.history.kafka.bootstrap.servers": "kafka:29092",
+                "database.history.kafka.topic": "dbhistory.demo" ,
+                "include.schema.changes": "true",
+                "transforms": "addTopicSuffix",
+                "transforms.addTopicSuffix.type":"org.apache.kafka.connect.transforms.RegexRouter",
+                "transforms.addTopicSuffix.regex":"(.*)",
+                "transforms.addTopicSuffix.replacement":"$1-raw"
+                }
+        }'
 
 Check that imported data looks ok. You can use the Landoop Topics UI and look at the data in the "book" and "customer"
 topics. Or go old-school with the command line (we use the kafka-connect container just because it has the command
 line tools installed):
 
-    docker-compose exec kafka-connect kafka-avro-console-consumer --bootstrap-server kafka:29092 --topic book --from-beginning --property schema.registry.url=http://schema-registry:8081
+    docker-compose exec kafka-connect kafka-avro-console-consumer --bootstrap-server kafka:29092 --topic asgard.inventory.book --from-beginning --property schema.registry.url=http://schema-registry:8081
 
 
 Press CTRL-C to exit.
-
-
-[**TODO**] Change data in MySQL and see that Kafka gets updated.
 
 ### Start Java Mock Producer
 
@@ -268,6 +316,10 @@ and transform data inside Kafka.
 Launch the KSQL cli:
 
     docker-compose exec ksql-cli ksql http://ksql-server:8088
+
+If you get an error that the server is not running, start it:
+
+    docker-compose up ksql-server
 
 ### Explore topics
 
@@ -400,14 +452,6 @@ The resulting Kafka topic could be used to drive fraud checks, automatically hol
     2018-05-17 21:36:55 | 42051
     2018-05-17 21:37:00 | 10700
 
-### Average ticket
-    
-**TODO** this is not average ticket, it should be average purchase.totalAmount, how about do it per region or so?
-
-Persist as a table:
-
-    CREATE TABLE VIEWS_PER_BOOK AS select b.title, count(*) as view_count from interaction i left join book b on i.Id = b.bookId where i.event='view' group by b.title;
-
 ### KSQL reference
 
 * https://www.confluent.io/product/ksql/
@@ -423,19 +467,19 @@ Persist as a table:
 
 ## Stream data Transformation with Kafka Streams
 
-A Kafka Streams application is a normal Java app, which makes it profit from Java's power and tool support. 
-Most Kafka Streams applications both read and write data to Kafka topics, though external systems can also be involved, 
+A Kafka Streams application is a normal Java app, which makes it profit from Java's power and tool support.
+Most Kafka Streams applications both read and write data to Kafka topics, though external systems can also be involved,
 after all, the data is in a Java application.
 
-While Kafka Streams is much more mature and powerful than KSQL, it does require a bit of experience with lambda 
+While Kafka Streams is much more mature and powerful than KSQL, it does require a bit of experience with lambda
 expressions and the Kafka Streams API.
 
 The goal of this section is that you get a feeling about the basics of Kafka Streams and try out a few examples. 
 
 ### Average shipping time
 
-In this example, we calculate the average time the shipping partner takes to deliver ur orders. 
-We work with one input topic "shipping", correlating the timestamp of the record with status "underway" with the one 
+In this example, we calculate the average time the shipping partner takes to deliver ur orders.
+We work with one input topic "shipping", correlating the timestamp of the record with status "underway" with the one
 with status "delivered".
 
  * Open the file ch.ipt.handson.streams.ShipmentTimeStreamsApp
@@ -465,7 +509,7 @@ and [here](https://kafka.apache.org/11/javadoc/org/apache/kafka/streams/package-
 ## Stream data out of Kafka
 
 We'll use Kafka Connect again, but this time to stream data out of Kafka to Elasticsearch. 
-Then, we'll see cool charts in Kibana.
+Then, we'll visualize the data in Kibana.
 
 ### Kafka Connect to Elasticsearch
 
