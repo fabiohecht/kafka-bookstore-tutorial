@@ -183,7 +183,8 @@ You should be able to use a browser and see a few web UIs running. The Web UIs a
  - Confluent Control Center: http://localhost:9021
  - Landoop Kafka Topics UI: http://localhost:8000
  - Landoop Confluent Schema Registry UI: http://localhost:8001
- - Landoop Kafka Connect UI: http://localhost:8003
+ - Landoop Kafka Connect UI 1: http://localhost:8003
+ - Landoop Kafka Connect UI 2: http://localhost:8004
  - Kibana web UI: http://localhost:5601
 
 There are also command line tools and APIs that are more powerful.
@@ -523,7 +524,15 @@ Then, we'll visualize the data in Kibana.
 
 ### Kafka Connect to Elasticsearch
 
-Elasticsearch connector is installed with Confluent Open Source by default. Create a mapping template:
+Elasticsearch is a popular document storage that has powerful full-text search capabilities.
+It is often used for text queries, analytics and as an key-value store.
+For the key-value store use case, it supports using keys from Kafka messages as document ids in Elasticsearch and
+provides configurations ensuring that updates to a key are written to Elasticsearch in order. 
+Elasticsearch’s idempotent write semantics guarantees exactly once delivery.
+
+It if often used with Kibana, an open source visualization plugin to create real time dashboards.
+
+The Elasticsearch connector is installed with Confluent Open Source by default. Create a mapping template:
 
     curl -XPUT "http://localhost:9200/_template/kafkaconnect/" -H 'Content-Type: application/json' -d'{"index_patterns":"*","settings":{"number_of_shards":1,"number_of_replicas":0},"mappings":{"_default_":{"dynamic_templates":[{"dates":{"match":"EXTRACT_TS","mapping":{"type":"date"}}},{"non_analysed_string_template":{"match":"*","match_mapping_type":"string","mapping":{"type":"keyword"}}}]}}}'
 
