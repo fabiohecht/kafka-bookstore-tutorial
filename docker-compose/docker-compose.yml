@@ -99,6 +99,7 @@ services:
       - kafka
       - schema-registry
       - kafka-rest-proxy
+      - elasticsearch
     extra_hosts:
       - "moby:127.0.0.1"
 
@@ -229,10 +230,8 @@ services:
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:6.2.4
-    container_name: elasticsearch
+    hostname: elasticsearch
     #restart: always
-    depends_on:
-      - kafka-connect-cp
     ports:
       - "9200:9200"
       - "9300:9300"
@@ -243,8 +242,6 @@ services:
     image: docker.elastic.co/kibana/kibana:6.2.4
     container_name: kibana
     restart: always
-    depends_on:
-      - elasticsearch
     ports:
       - "5601:5601"
     environment:
