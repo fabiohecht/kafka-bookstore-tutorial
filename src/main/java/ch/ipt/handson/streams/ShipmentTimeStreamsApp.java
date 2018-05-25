@@ -45,13 +45,17 @@ public class ShipmentTimeStreamsApp extends KafkaStreamsApp {
 
                 //we need to set the key to the packet ID, because in Kafka Streams, all joins are key-based
                 .selectKey((key, value) -> value.getPacket())
-                .peek((k, v) -> log.info(" underway: {} {}", k, v.toString()));
+
+                //uncomment the peek lines to log intermediate keys and values
+                //.peek((k, v) -> log.info(" underway: {} {}", k, v.toString()))
+                ;
 
         // stream with all "delivered" packets
         KStream<String, Shipping> deliveredShipments = shipping
                 .filter((key, value) -> value.getStatus().equals("delivered"))
                 .selectKey((key, value) -> value.getPacket())
-                .peek((k, v) -> log.info(" delivered: {} {}", k, v.toString()));
+                //.peek((k, v) -> log.info(" delivered: {} {}", k, v.toString()))
+                ;
 
         // here comes the join
         KStream<String, ShippingTime> timeToDeliver = deliveredShipments
@@ -67,7 +71,7 @@ public class ShipmentTimeStreamsApp extends KafkaStreamsApp {
                         JoinWindows.of(Duration.of(5, ChronoUnit.MINUTES).toMillis()));
 
         timeToDeliver
-                .peek((k, v) -> log.info(" joined: {} {}", k, v.toString()))
+                //.peek((k, v) -> log.info(" joined: {} {}", k, v.toString()))
 
                 //all aggregations in Kafka Streams need a groping function (similar to GROUP BY in SQL)
                 //since we want to aggregate all records, we group by a constant
@@ -83,7 +87,7 @@ public class ShipmentTimeStreamsApp extends KafkaStreamsApp {
 
                 //the average can be calculated from the sum and count that we write to the topic
                 .toStream()
-                .peek((k, v) -> log.info(" write: {} {} avg={}s", k, v.toString(), v.getTimeToDeliver() / v.getCount()))
+                .peek((k, v) -> log.info(" write: {} {} avg={}ms", k, v.toString(), v.getTimeToDeliver() / v.getCount()))
                 .to(OUTPUT_TOPIC);
 
         // starts stream

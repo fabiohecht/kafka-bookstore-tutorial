@@ -53,8 +53,8 @@ public class PaymentsOutstandingStreamsApp extends KafkaStreamsApp {
                 //we concentrate ourselves in events that occur before shipping (packet==null means not shipped yet)
                 .filter((key, value) -> value.getPacket() == null)
 
-                //for debugging/demo
-                .peek((k, v) -> log.info(" before join: {} {}", k, v.toString()))
+                //uncomment the peek lines for extra logging
+                //.peek((k, v) -> log.info(" before join: {} {}", k, v.toString()))
 
                 //here comes the join between the purchase and payment topics
                 //we use an intermediate object PurchasePayment to hold the information about both events
@@ -64,7 +64,7 @@ public class PaymentsOutstandingStreamsApp extends KafkaStreamsApp {
                         (purchase, payment) -> new PurchasePayment(purchase, payment),
                         //in Kafka Streams, all joins between 2 streams are window-based
                         JoinWindows.of(Duration.of(5, ChronoUnit.MINUTES).toMillis()))
-                .peek((k, v) -> log.info(" after join: {} {}", k, v.toString()))
+                //.peek((k, v) -> log.info(" after join: {} {}", k, v.toString()))
 
                 //every aggregation needs a grouping function first
                 //we want to aggregate all events together, so we group by a constant
@@ -86,7 +86,6 @@ public class PaymentsOutstandingStreamsApp extends KafkaStreamsApp {
 
                                 aggregate.setAmountOutstanding(aggregate.getAmountOutstanding() - purchasePayment.getPayment().getAmount());
                             }
-
                             return aggregate;
                         })
 

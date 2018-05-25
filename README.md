@@ -145,7 +145,7 @@ Then clone this repository: https://github.com/fabiohecht/kafka-bookstore-tutori
 ### VirtualBox image
 
 Please install Virtual Box and get the image from a USB stick (ask Fabio).
-It already has Docker and all the stuff in it.
+It's large, but it already has all the stuff in it.
 
 ### Get the platform started
 
@@ -163,33 +163,38 @@ To see which containers are running and their statuses:
 
     docker-compose ps
 
+Hopefully they all have status Up. 
 It may take like a minute until all is running. You can see the logs of each container by typing:
 
     docker-compose logs [image-name]
 
-On my machine, the elasticsearch image could not start,
+On my machine, the elasticsearch image could not start, the error was:
 
     elasticsearch         | [2018-05-24T15:20:11,779][INFO ][o.e.b.BootstrapChecks    ] [nw0uKIe] bound or publishing to a non-loopback address, enforcing bootstrap checks
     elasticsearch         | ERROR: [1] bootstrap checks failed
     elasticsearch         | [1]: max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]
 
-Fix was doing a:
+The fix is doing a:
 
     sudo sysctl -w vm.max_map_count=262144
 
-Kafka command-line tools:
-
-    TODO
-
-You should be able to use a browser and see a few web UIs running:
-
+You should be able to use a browser and see a few web UIs running. The Web UIs are useful to visualize some information.
+      
  - Confluent Control Center: http://localhost:9021
  - Landoop Kafka Topics UI: http://localhost:8000
  - Landoop Confluent Schema Registry UI: http://localhost:8001
  - Landoop Kafka Connect UI: http://localhost:8003
  - Kibana web UI: http://localhost:5601
 
-The Web UIs are useful to visualize some information. There are also command line tools and APIs that are more powerful.
+There are also command line tools and APIs that are more powerful.
+The Kafka command-line tools are included in most of the images.
+For example, the kafka-connect image.
+For example, to list all existing topics, you can use the Confluent Control Center, the Landoop Topics UI, 
+or via command line:
+
+    docker-compose exec kafka-connect kafka-topics --list --zookeeper zookeeper:2181
+
+Only system topics are listed for the moment, but soon enough we will create our own topics.
 
 ## Stream Data into Kafka
 
@@ -207,7 +212,6 @@ From the MySQL prompt, explore the two tables:
     SHOW TABLES;
     SELECT * FROM BOOK;
     SELECT * FROM CUSTOMERS;
-
 
 When you are done, exit with ctrl+D.
 
@@ -270,7 +274,6 @@ To configure Debezium, run the follow call to the Kafka Connect REST endpoint:
                 }
         }'
 
-
 Check that imported data looks ok. You can use the Landoop Topics UI and look at the data in the "book" and "customer"
 topics. Or go old-school with the command line (we use the kafka-connect container just because it has the command
 line tools installed):
@@ -280,37 +283,35 @@ line tools installed):
 
 Press CTRL-C to exit.
 
-[**TODO**] Change data in MySQL and see that Kafka gets updated.
-
 ### Start Java Mock Producer
 
-Let's start the Java Mock event producer. All of this can be done from IntelliJ's, which is contained in the VM.
-Let's first compile the project with Maven. On the right-hand side of IntelliJ's window, under "Maven Projects",
-"Lifecycle", double click "clean", then double click "package".
+Let's start the Java Mock event producer. All of this can be done from within IntelliJ Idea, which is contained in the VM.
+You can of course use your favorite IDE.
+Let's first compile the project with Maven. On the right-hand side of IntelliJ's window, under "Maven Projects", 
+"Lifecycle", double click "clean", then double click "compile". Then:
 
- * On the project navigator (left part of the screen), navigate to src/main/java/...producer.
- * Open the class MockProducer. Have a look at how we produce events to Kafka by calling producer.send().
+ * On the project navigator (left part of the screen), navigate to src, main, java/...producer. 
+ * Open the class MockProducer. Have a look at how we produce events to Kafka by calling producer.send(). It uses the Kafka Producer API.
  * Run the MockProducer -- right click file name and "Run 'MockProducer.main()'.
  * If all goes well, we are producing mock events to Kafka!
 
-Like before, you can use the kafka-avro-console-consumer or Landoop's UI to see the events coming in your topics.
-You can choose whether to keep it running in the background or to stop it now and start when you want events to be produced.
+Like before, you can use the kafka-avro-console-consumer or Landoop's UI to see the events coming in your topics. 
+Keep the mock event producer running in the background.
 
-In real life, a Java Spring Boot microservice could expose an API that, when called by the Shipping partner or the Post,
-produces the event.
+In real life, we could picture for example a Java Spring Boot microservice that exposes an API that, when called by the 
+Shipping company, produces the event.
 
 #### If you want to dig in deeper
 
 For more information about the data schemas used, have a look at src/main/resources/avro/Schemas.avsc. These are defined
-in Avro format, which is fairly human-readable (Json). The spec can be found at http://avro.apache.org/docs/1.8.2/spec.html.
-When the project is compiled with maven, the Java classes for the data model are generated, as specified in the pom.xml
-file under &lt;buld>&lt;plugins>. You can test it with “mvn clean compile” from the command line (current directory is project
-root) or using IntelliJ’s “Maven Project” tool button (seen on the right-hand side), under inventory-tutorial,
-Lifecycle, double click “clean”, double click “compile”.
+in Avro format, which is fairly human-readable (Json). The latest spec can be found at http://avro.apache.org/docs/1.8.2/spec.html.
+When the project is compiled with Maven, the Java classes for the data model are generated (in package import ch.ipt.handson.model),
+as specified in the pom.xml file under &lt;buld>&lt;plugins>.
 
 ## Stream Data Transformation with KSQL
 
-KSQL is a new product from Confluent officially released in March 2018... [TODO shortly describe KSQL]
+KSQL is a new product from Confluent officially released in March 2018. It offers a SQL-like query language to inspect
+and transform data inside Kafka.
 
 Launch the KSQL cli:
 
@@ -329,7 +330,7 @@ Press ctrl-C to cancel
 
 If the Java producer is running, then run:
 
-    PRINT 'interaction'
+    PRINT 'interaction';
 
 to see a live feed of messages being added to the topic (note the ommission of `FROM BEGINNING`)
 
@@ -438,8 +439,6 @@ The resulting Kafka topic could be used to drive fraud checks, automatically hol
     In der Strafkolonie | 59
     Kafka und Prag | 72
 
-**TODO** describe result?
-
 ### What the total value of payments, per 5 second window?
 
 (https://github.com/confluentinc/ksql/issues/430)
@@ -452,26 +451,6 @@ The resulting Kafka topic could be used to drive fraud checks, automatically hol
     2018-05-17 21:36:50 | 25199
     2018-05-17 21:36:55 | 42051
     2018-05-17 21:37:00 | 10700
-
-### top 5 sold books by revenue (ideally join with payments to exclude unpaid orders + join with book to get author name)
-
-CREATE STREAM purchasest with (kafka_topic='purchase', VALUE_FORMAT='AVRO', key='purchaseId');
-
-SELECT bookIds, TOPK(totalAmount, 5) \
-FROM purchasest \
-WINDOW TUMBLING (SIZE 1 HOUR) \
-GROUP BY bookIds;
-
-### Average ticket
-
-**TODO** this is not average ticket, it should be average purchase.totalAmount, how about do it per region or so
-
-Persist as a table:
-
-    CREATE TABLE VIEWS_PER_BOOK AS select b.title, count(*) as view_count from interaction i left join book b on i.Id = b.bookId where i.event='view' group by b.title;
-
-
-
 
 ### KSQL reference
 
@@ -495,15 +474,7 @@ after all, the data is in a Java application.
 While Kafka Streams is much more mature and powerful than KSQL, it does require a bit of experience with lambda
 expressions and the Kafka Streams API.
 
-Some current limitations of KSQL:
-
- - only join stream and table
- - cannot join by array item
- - cannot use external (e.g. Java) data structures and logic
- - cannot use avro keys
- - cannot use avro values that reference existing data types, or records of records, or arrays of records
-
-The goal is that you get a feeling about the basics of Kafka Streams and try out a few examples.
+The goal of this section is that you get a feeling about the basics of Kafka Streams and try out a few examples. 
 
 ### Average shipping time
 
@@ -512,10 +483,11 @@ We work with one input topic "shipping", correlating the timestamp of the record
 with status "delivered".
 
  * Open the file ch.ipt.handson.streams.ShipmentTimeStreamsApp
- * Read the comments in the code
+ * Read the comments in the code and try to make sense of it
  * Run the application (right click on the filename, select Run...)
  * Watch the app output (logs) and what's written to the topic (shipping-times)
- * You can stop the app when you are done to free resources
+ * The average shipping time calculated is roughly 5s, which matches the MEAN_DELIVERY_TIME_SECONDS constant defined in the MockProducer.
+ * You can stop the app when you are done
 
 ### Outstanding Payments
 
@@ -523,11 +495,10 @@ This Kafka Streams Application outputs in real time which purchases have not alr
 total amount to be received by the Kafka Bookstore.
 
  * Open the file ch.ipt.handson.streams.PaymentsOutstandingStreamsApp
- * Read the comments in the code
+ * Read the comments in the code try to make sense of it
  * Run the application (right click on the filename, select Run...)
- * Watch the app output (logs) and what's written to the topic (shipping-times)
- * You can stop the app when you are done to free resources
-
+ * Watch the app output (logs) and what's written to the output topic
+ * You can stop the app when you are done if you want
 
 ### More information
 
@@ -535,13 +506,12 @@ More information about Kafka Streams can be found at
 [Confluent](https://docs.confluent.io/current/streams/index.html), [Kafka](https://kafka.apache.org/documentation/streams/)
 and [here](https://kafka.apache.org/11/javadoc/org/apache/kafka/streams/package-summary.html) is some good old Javadoc.
 
-
 ## Stream data out of Kafka
 
-We'll use Kafka Connect again, but this time to stream data out of Kafka to Elastic Search.
-Then, we'll see cool charts in Kibana.
+We'll use Kafka Connect again, but this time to stream data out of Kafka to Elasticsearch. 
+Then, we'll visualize the data in Kibana.
 
-### Kafka Connect to Elastic Search
+### Kafka Connect to Elasticsearch
 
 Elasticsearch connector is installed with Confluent Open Source by default. Create a mapping template:
 

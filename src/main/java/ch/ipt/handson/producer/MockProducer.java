@@ -15,12 +15,15 @@ import java.util.stream.Collectors;
 
 public class MockProducer {
 
+    //we'll produce to these topics
     public static final String TOPIC_WEBSITE_INTERACTION = "interaction";
     public static final String TOPIC_ORDER = "purchase";
     public static final String TOPIC_PAYMENT = "payment";
     public static final String TOPIC_SHIPPING = "shipping";
 
-
+    //these settings control the probabilities that an event is produced
+    //you don't need to change them, unless you want to
+    static private Random random = new Random();
     public static final double VIEWS_PER_SECOND = 2.0;
     public static final double CART_ODDS = .5;
     public static final double ORDER_ODDS = .2;
@@ -34,15 +37,15 @@ public class MockProducer {
     public static final int STDEV_DELIVERY_TIME_SECONDS = 3;
     private static final double PACKET_LOST_ODDS = .2;
 
+    //the kafka producer!
     static private Producer producer;
-    static private Random random = new Random();
+
     static final Map<Customer, List<Book>> carts = new HashMap<>();
 
     static final RateLimiter rateLimiter = RateLimiter.create(VIEWS_PER_SECOND);
 
     static final ScheduledExecutorService executor = Executors.newScheduledThreadPool(10);
     static volatile boolean running = true;
-
 
     public static void main(String[] args) {
         setUpProducer();
@@ -57,6 +60,7 @@ public class MockProducer {
             Book book = getRandomBook();
             Customer customer = getRandomCustomer();
 
+            //produce a view event (interaction topic)
             ProducerRecord<String, WebsiteInteraction> viewRecord = getInteractionRecord(book, customer, "view");
             producer.send(viewRecord);
             System.out.println("iVIEW " + viewRecord);
@@ -65,16 +69,19 @@ public class MockProducer {
             if (random.nextDouble() < CART_ODDS) {
                 addToCart(customer, book);
 
+                //produce a cart event (interaction topic)
                 ProducerRecord<String, WebsiteInteraction> cartRecord = getInteractionRecord(book, customer, "cart");
                 producer.send(cartRecord);
                 System.out.println("iCART " + cartRecord);
 
                 if (random.nextDouble() < ORDER_ODDS) {
 
-                    ProducerRecord<String, WebsiteInteraction> orderInteractionRecord = getInteractionRecord(book, customer, "cart");
+                    //produce an order event (interaction topic)
+                    ProducerRecord<String, WebsiteInteraction> orderInteractionRecord = getInteractionRecord(book, customer, "order");
                     producer.send(cartRecord);
                     System.out.println("iORDER " + orderInteractionRecord);
 
+                    //produce an order event (purchase topic)
                     ProducerRecord<String, Purchase> orderRecord = getPurchaseRecord(customer);
                     producer.send(orderRecord);
                     System.out.println("ORDER " + orderRecord);
@@ -108,7 +115,7 @@ public class MockProducer {
         String packet = RandomStringUtils.random(10, true, true);
         order.setPacket(packet);
 
-        //we update order with packet id
+        //update purchase with packet id
         ProducerRecord<String, Purchase> orderRecordWithPacket = getPurchaseRecord(order);
         producer.send(orderRecordWithPacket);
 
