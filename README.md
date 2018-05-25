@@ -249,7 +249,7 @@ Flattened schema, current record state only:
                 }
         }'
 
-Nested schema, before/after record state & binlog metadata.
+For interst, you can also create this one, but it is for interest only and not necessary for the rest of the execise. It puts the data in Kafka with a nested schema, before/after record state & binlog metadata.
 
     curl -i -X POST -H "Accept:application/json" \
         -H  "Content-Type:application/json" http://localhost:8083/connectors/ \
@@ -336,7 +336,7 @@ to see a live feed of messages being added to the topic (note the ommission of `
 ### Register stream and tables
 
     CREATE TABLE BOOK with (kafka_topic='asgard.inventory.book', VALUE_FORMAT='AVRO', key='bookId');
-    CREATE TABLE CUSTOMER with (kafka_topic='asgard.inventory.customers', VALUE_FORMAT='AVRO', key='customerId');
+    CREATE TABLE CUSTOMER with (kafka_topic='asgard.inventory.customers', VALUE_FORMAT='AVRO', key='Id');
     CREATE TABLE PURCHASE with (kafka_topic='purchase', VALUE_FORMAT='AVRO', key='purchaseId');
     CREATE TABLE PAYMENT with (kafka_topic='payment', VALUE_FORMAT='AVRO', key='transactionId');
     CREATE STREAM SHIPPING with (kafka_topic='shipping', VALUE_FORMAT='AVRO');
@@ -515,7 +515,7 @@ Then, we'll visualize the data in Kibana.
 Elasticsearch is a popular document storage that has powerful full-text search capabilities.
 It is often used for text queries, analytics and as an key-value store.
 For the key-value store use case, it supports using keys from Kafka messages as document ids in Elasticsearch and
-provides configurations ensuring that updates to a key are written to Elasticsearch in order. 
+provides configurations ensuring that updates to a key are written to Elasticsearch in order.
 Elasticsearch’s idempotent write semantics guarantees exactly once delivery.
 
 It if often used with Kibana, an open source visualization plugin to create real time dashboards.
@@ -568,10 +568,10 @@ Create a connector that streams the Outstanding Payments stream to Elasticsearch
         "transforms.ExtractTimestamp.timestamp.field" : "EXTRACT_TS"
       }
     }'
-    
+
 You can use the Kafka Connect API or Landoop to check the status of the connectors, for example with:
-    
-    http://localhost:18083/connectors  
+
+    http://localhost:18083/connectors
     http://localhost:18083/connectors/outstanding_payments_elastic/tasks/0/status
 
 
