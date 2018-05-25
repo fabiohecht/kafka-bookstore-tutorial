@@ -278,6 +278,8 @@ line tools installed):
 
     docker-compose exec kafka-connect-cp kafka-avro-console-consumer --bootstrap-server kafka:29092 --topic asgard.inventory.book --from-beginning --property schema.registry.url=http://schema-registry:8081
 
+    docker-compose exec kafka-connect-cp kafka-avro-console-consumer --bootstrap-server kafka:29092 --topic asgard.inventory.customers --from-beginning --property schema.registry.url=http://schema-registry:8081
+
 Press CTRL-C to exit.
 
 ### Start Java Mock Producer
@@ -333,8 +335,8 @@ to see a live feed of messages being added to the topic (note the ommission of `
 
 ### Register stream and tables
 
-    CREATE TABLE BOOK with (kafka_topic='book', VALUE_FORMAT='AVRO', key='bookId');
-    CREATE TABLE CUSTOMER with (kafka_topic='customer', VALUE_FORMAT='AVRO', key='customerId');
+    CREATE TABLE BOOK with (kafka_topic='asgard.inventory.book', VALUE_FORMAT='AVRO', key='bookId');
+    CREATE TABLE CUSTOMER with (kafka_topic='asgard.inventory.customers', VALUE_FORMAT='AVRO', key='customerId');
     CREATE TABLE PURCHASE with (kafka_topic='purchase', VALUE_FORMAT='AVRO', key='purchaseId');
     CREATE TABLE PAYMENT with (kafka_topic='payment', VALUE_FORMAT='AVRO', key='transactionId');
     CREATE STREAM SHIPPING with (kafka_topic='shipping', VALUE_FORMAT='AVRO');
