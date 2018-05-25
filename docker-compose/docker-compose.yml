@@ -277,7 +277,10 @@ services:
      - CONFIG_STORAGE_TOPIC=my_connect_configs
      - OFFSET_STORAGE_TOPIC=my_connect_offsets
      - STATUS_STORAGE_TOPIC=my_connect_status
-#     - database.history.kafka.topic=another_topic
+     - KEY_CONVERTER=io.confluent.connect.avro.AvroConverter
+     - VALUE_CONVERTER=io.confluent.connect.avro.AvroConverter
+     - CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL=http://schema-registry:8081
+     - CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL=http://schema-registry:8081
     depends_on:
      - kafka
      - schema-registry

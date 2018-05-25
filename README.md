@@ -163,7 +163,7 @@ To see which containers are running and their statuses:
 
     docker-compose ps
 
-Hopefully they all have status Up. 
+Hopefully they all have status Up.
 It may take like a minute until all is running. You can see the logs of each container by typing:
 
     docker-compose logs [image-name]
@@ -179,7 +179,7 @@ The fix is doing a:
     sudo sysctl -w vm.max_map_count=262144
 
 You should be able to use a browser and see a few web UIs running. The Web UIs are useful to visualize some information.
-      
+
  - Confluent Control Center: http://localhost:9021
  - Landoop Kafka Topics UI: http://localhost:8000
  - Landoop Confluent Schema Registry UI: http://localhost:8001
@@ -190,7 +190,7 @@ You should be able to use a browser and see a few web UIs running. The Web UIs a
 There are also command line tools and APIs that are more powerful.
 The Kafka command-line tools are included in most of the images.
 For example, the kafka-connect image.
-For example, to list all existing topics, you can use the Confluent Control Center, the Landoop Topics UI, 
+For example, to list all existing topics, you can use the Confluent Control Center, the Landoop Topics UI,
 or via command line:
 
     docker-compose exec kafka-connect-cp kafka-topics --list --zookeeper zookeeper:2181
@@ -218,15 +218,11 @@ When you are done, exit with ctrl+D.
 
 ### Stream MySQL changes into Kafka
 
-The Docker Compose set of containers includes one for Kafka Connect with the Confluent Platform connectors present 
-(covering JDBC, HDFS, S3, and Elasticsearch), and another for Kafka Connect with the Debezium MySQL CDC connector.
+The Docker Compose set of containers includes one for Kafka Connect with the Confluent Platform connectors present (covering JDBC, HDFS, S3, and Elasticsearch), and another for Kafka Connect with the Debezium MySQL CDC connector.
 
-Kafka Connect jobs are configured via API calls. There are also GUIs layers available. We'll use curl to call the APIs
-directly.
+To configure Debezium, run the follow call to the Kafka Connect REST endpoint. There are two configurations you can use; run both and inspect the results to understand the differences. In practice you would only use one.
 
-To configure Debezium, run the follow call to the Kafka Connect REST endpoint:
-
-(Flattened schema) :
+Flattened schema, current record state only:
 
     curl -i -X POST -H "Accept:application/json" \
         -H  "Content-Type:application/json" http://localhost:8083/connectors/ \
@@ -240,7 +236,6 @@ To configure Debezium, run the follow call to the Kafka Connect REST endpoint:
                 "database.password": "dbz",
                 "database.server.id": "42",
                 "database.server.name": "asgard",
-                "table.whitelist": "demo.customers",
                 "database.history.kafka.bootstrap.servers": "kafka:29092",
                 "database.history.kafka.topic": "dbhistory.demo" ,
                 "include.schema.changes": "true",
@@ -254,7 +249,7 @@ To configure Debezium, run the follow call to the Kafka Connect REST endpoint:
                 }
         }'
 
-(Full payload) : 
+Nested schema, before/after record state & binlog metadata.
 
     curl -i -X POST -H "Accept:application/json" \
         -H  "Content-Type:application/json" http://localhost:8083/connectors/ \
@@ -268,9 +263,8 @@ To configure Debezium, run the follow call to the Kafka Connect REST endpoint:
                 "database.password": "dbz",
                 "database.server.id": "44",
                 "database.server.name": "asgard",
-                "table.whitelist": "demo.customers",
                 "database.history.kafka.bootstrap.servers": "kafka:29092",
-                "database.history.kafka.topic": "dbhistory.demo" ,
+                "database.history.kafka.topic": "dbhistory.demo.raw" ,
                 "include.schema.changes": "true",
                 "transforms": "addTopicSuffix",
                 "transforms.addTopicSuffix.type":"org.apache.kafka.connect.transforms.RegexRouter",
@@ -286,30 +280,22 @@ line tools installed):
 
 Press CTRL-C to exit.
 
-Note: Due to time constraints, we are using two instances of Connect in this tutorial, one with the Debezium connector for 
-ingestion and one with Elasticsearch connector for output. In real life you could use both connectors in the same connect
-cluster. Thus, we configured two instances of the Landoop Connect UI:
-
- - http://localhost:8003 manages the instance with Confluent connectors (e.g. Elasticsearch)
- - http://localhost:8004 manages the instance with Debezium connectors
-
-
 ### Start Java Mock Producer
 
 Let's start the Java Mock event producer. All of this can be done from within IntelliJ Idea, which is contained in the VM.
 You can of course use your favorite IDE.
-Let's first compile the project with Maven. On the right-hand side of IntelliJ's window, under "Maven Projects", 
+Let's first compile the project with Maven. On the right-hand side of IntelliJ's window, under "Maven Projects",
 "Lifecycle", double click "clean", then double click "compile". Then:
 
- * On the project navigator (left part of the screen), navigate to src, main, java/...producer. 
+ * On the project navigator (left part of the screen), navigate to src, main, java/...producer.
  * Open the class MockProducer. Have a look at how we produce events to Kafka by calling producer.send(). It uses the Kafka Producer API.
  * Run the MockProducer -- right click file name and "Run 'MockProducer.main()'.
  * If all goes well, we are producing mock events to Kafka!
 
-Like before, you can use the kafka-avro-console-consumer or Landoop's UI to see the events coming in your topics. 
+Like before, you can use the kafka-avro-console-consumer or Landoop's UI to see the events coming in your topics.
 Keep the mock event producer running in the background.
 
-In real life, we could picture for example a Java Spring Boot microservice that exposes an API that, when called by the 
+In real life, we could picture for example a Java Spring Boot microservice that exposes an API that, when called by the
 Shipping company, produces the event.
 
 #### If you want to dig in deeper
@@ -485,7 +471,7 @@ after all, the data is in a Java application.
 While Kafka Streams is much more mature and powerful than KSQL, it does require a bit of experience with lambda
 expressions and the Kafka Streams API.
 
-The goal of this section is that you get a feeling about the basics of Kafka Streams and try out a few examples. 
+The goal of this section is that you get a feeling about the basics of Kafka Streams and try out a few examples.
 
 ### Average shipping time
 
@@ -519,7 +505,7 @@ and [here](https://kafka.apache.org/11/javadoc/org/apache/kafka/streams/package-
 
 ## Stream data out of Kafka
 
-We'll use Kafka Connect again, but this time to stream data out of Kafka to Elasticsearch. 
+We'll use Kafka Connect again, but this time to stream data out of Kafka to Elasticsearch.
 Then, we'll visualize the data in Kibana.
 
 ### Kafka Connect to Elasticsearch
@@ -564,22 +550,21 @@ Create a connector that streams the Outstanding Payments stream to Elasticsearch
          -H "Content-Type: application/json" \
          -d '{
       "name": "outstanding_payments_elastic",
-      "config":  {
+      "config": {
                       "topics": "outstanding-amount",
-                      "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+        "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
                       "connection.url": "http://elasticsearch:9200",
                       "tasks.max": "1",
-                      "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-                      "value.converter": "io.confluent.connect.avro.AvroConverter",
+        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "value.converter": "io.confluent.connect.avro.AvroConverter",
                       "value.converter.schema.registry.url":"http://schema-registry:8081",
                       "type.name": "kafkaconnect",
-                              "key.ignore": "true",
+        "key.ignore": "true",
         "schema.ignore": "false",
         "transforms": "ExtractTimestamp",
         "transforms.ExtractTimestamp.type": "org.apache.kafka.connect.transforms.InsertField$Value",
         "transforms.ExtractTimestamp.timestamp.field" : "EXTRACT_TS"
-
-                    }
+      }
     }'
     
 You can use the Kafka Connect API or Landoop to check the status of the connectors, for example with:
