@@ -249,7 +249,7 @@ Flattened schema, current record state only:
                 }
         }'
 
-For interst, you can also create this one, but it is for interest only and not necessary for the rest of the execise. It puts the data in Kafka with a nested schema, before/after record state & binlog metadata.
+For interest, you can also create this one, but it is for interest only and not necessary for the rest of the execise. It puts the data in Kafka with a nested schema, before/after record state & binlog metadata.
 
     curl -i -X POST -H "Accept:application/json" \
         -H  "Content-Type:application/json" http://localhost:8083/connectors/ \
@@ -385,14 +385,14 @@ Sample Customer data:
 
 Query:
 
-    ksql> SELECT P.purchaseId, p.totalAmount, c.firstname + ' ' + c.lastname as full_name, c.email, c.city, c.country FROM PURCHASE_STREAM p LEFT JOIN CUSTOMER c on p.customerId=c.customerId LIMIT 1;
+    ksql> SELECT P.purchaseId, p.totalAmount, c.first_name + ' ' + c.last_name as full_name, c.email, c.city, c.country FROM PURCHASE_STREAM p LEFT JOIN CUSTOMER c on p.customerId=c.id LIMIT 1;
     f5d4e42f-c82f-4228-940e-19d6ddbf622c | 1500 | Cordey Targett | ctargett2c@mediafire.com | Frankfurt am Main | DE
     LIMIT reached for the partition.
     Query terminated
 
 Persist this enriched stream, for external use and subsequent processing
 
-    CREATE STREAM Purchase_enriched AS SELECT P.purchaseId, p.totalAmount, c.firstname + ' ' + c.lastname as full_name, c.email, c.city, c.country FROM PURCHASE_STREAM p LEFT JOIN CUSTOMER c on p.customerId=c.customerId;
+    CREATE STREAM Purchase_enriched AS SELECT P.purchaseId, p.totalAmount, c.first_name + ' ' + c.last_name as full_name, c.email, c.city, c.country FROM PURCHASE_STREAM p LEFT JOIN CUSTOMER c on p.customerId=c.id;
 
 ### What's the geographical distribution by city of orders placed by 30 minute window?
 
